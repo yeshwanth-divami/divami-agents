@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(doc-narrator)",
+      "Skill(doc-narrator:*)",
+      "Skill(icm-skill-creator)",
+      "Skill(icm-skill-creator:*)"
+    ]
+  }
+}

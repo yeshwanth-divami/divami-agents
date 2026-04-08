@@ -1,0 +1,21 @@
+{
+  "criteria": [
+    {
+      "name": "MOM completeness",
+      "description": "The MOM captures meeting context, decisions, action items, owners, blockers, and detailed discussion."
+    },
+    {
+      "name": "Actionability",
+      "description": "Todo items are concise, clearly owned, and immediately actionable."
+    },
+    {
+      "name": "Narrative fidelity",
+      "description": "The MOM preserves the actual shape of the meeting with clear acts, grounded quotes, and useful timestamps."
+    },
+    {
+      "name": "Context discipline",
+      "description": "The skill keeps one meeting at a time in scope and separates extraction from final artifact writing."
+    }
+  ],
+  "threshold": 3
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Retrospect Skill"
+  short_description: "Audit retries and repair weak skills"
+  default_prompt: "Use $retrospect-and-update-skill to review this chat, extract corrected patterns, and patch the skills that caused the misses."

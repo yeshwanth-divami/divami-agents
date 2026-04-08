@@ -1,0 +1,25 @@
+# .divami-skills.toml — run `divami-skills sync` to apply
+
+[claude]
+"divami-skills" = ["agno", "ai-slop-cleaner", "ask-claude", "ask-gemini", "autopilot", "bmad-orchestrator", "cancel", "configure-notifications", "convo-with-yeshwanth", "d3-visualization", "deep-interview", "doctor", "excalidraw", "gargi", "grove", "help", "hud", "note", "notes-capture", "omx-setup", "plan", "ralph", "ralplan", "security-review", "t-warrior", "team", "trace", "ultrawork", "visual-verdict", "web-clone", "worker"]
+
+[codex]
+"divami-skills" = []
+
+[gemini]
+"divami-skills" = []
+
+[copilot]
+"divami-skills" = []
+
+[claude-local]
+"divami-skills" = []
+
+[codex-local]
+"divami-skills" = ["cancel", "note", "ghost-skill"]
+
+[gemini-local]
+"divami-skills" = []
+
+[copilot-local]
+"divami-skills" = []
