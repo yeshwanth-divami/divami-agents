@@ -234,6 +234,39 @@ def sync(cwd: Path, registry: Registry | None = None) -> list[SkillSyncResult]:
     return results
 
 
+def dump_rc(cwd: Path, registry: Registry | None = None) -> Path:
+    """Reverse of sync: scan linked symlinks and write them to .divami-skills.toml."""
+    if registry is None:
+        registry = build_registry()
+    all_llms = load_all_llms(local_base=cwd)
+    skillset_dirs = {v.resolve(): k for k, v in registry.items()}
+
+    toml_data: dict[str, dict[str, list[str]]] = {}
+    for llm_key, llm_path in all_llms.items():
+        if not llm_path.exists():
+            continue
+        for entry in sorted(llm_path.iterdir()):
+            if not entry.is_symlink():
+                continue
+            skillset_dir = entry.resolve().parent.resolve()
+            skillset_name = skillset_dirs.get(skillset_dir)
+            if skillset_name is None:
+                continue
+            toml_data.setdefault(llm_key, {}).setdefault(skillset_name, []).append(entry.name)
+
+    lines = ["# .divami-skills.toml — run `divami-skills sync` to apply\n"]
+    for llm_key, skillsets in toml_data.items():
+        lines.append(f"[{llm_key}]")
+        for ss, skills in skillsets.items():
+            skills_str = ", ".join(f'"{s}"' for s in skills)
+            lines.append(f'"{ss}" = [{skills_str}]')
+        lines.append("")
+
+    rc = cwd / RC_FILENAME
+    rc.write_text("\n".join(lines))
+    return rc
+
+
 def write_rc_template(cwd: Path, llm_keys: list[str], skillsets: list[str],
                       registry: Registry | None = None) -> Path:
     all_llms = load_all_llms(local_base=cwd)
