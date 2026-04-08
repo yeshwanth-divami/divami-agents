@@ -1,5 +1,6 @@
-PASSWORD = test123
-BUMP     = patch
+PASSWORD = ai@divami@2026
+BUMP     = patch  # patch | minor | major
+REPO     = yeshwanth-divami/divami-skills-dist
 
 .PHONY: venv pack publish
 
@@ -8,9 +9,16 @@ venv:
 	uv pip install --python .venv pyzipper textual build twine tomli
 
 pack:
-	.venv/bin/python scripts/pack.py --password $(PASSWORD)
+	@test -n "$(PASSWORD)" || { echo "ERROR: PASSWORD is required"; exit 1; }
+	SKILLS_PASSWORD=$(PASSWORD) .venv/bin/python scripts/pack.py
 
-# Pack the zip, build the distribution, then upload to PyPI via the [divami] profile
+# Usage: make publish PASSWORD=xxx [BUMP=minor]
 publish: pack
-	.venv/bin/python -m build
-	.venv/bin/twine upload --repository divami dist/*
+	uv version --bump $(BUMP)
+	VERSION=$$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"$$/\1/'); \
+	rm -rf dist/; \
+	.venv/bin/python -m build; \
+	.venv/bin/twine upload --repository divami dist/*.whl; \
+	gh release create "v$$VERSION" --title "v$$VERSION" --notes "" \
+		--repo $(REPO) \
+		"divami_skills/skills.zip#skills.zip"

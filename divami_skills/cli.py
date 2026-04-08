@@ -47,20 +47,38 @@ def _registry(args) -> manager.Registry:
 
 # ── Commands ──────────────────────────────────────────────────────────────────
 
+GITHUB_REPO = "yeshwanth-divami/divami-skills-dist"
+
+
 def cmd_unpack(_args) -> None:
-    zip_path = Path(__file__).parent / "skills.zip"
-    if not zip_path.exists():
-        print("Error: skills.zip not found in package.", file=sys.stderr)
+    import tempfile
+    import urllib.request
+    from importlib.metadata import version
+
+    v = version("divami-agents")
+    url = f"https://github.com/{GITHUB_REPO}/releases/download/v{v}/skills.zip"
+    print(f"Downloading built-in skills from GitHub release v{v} ...")
+    try:
+        with urllib.request.urlopen(url) as resp, tempfile.NamedTemporaryFile(
+            suffix=".zip", delete=False
+        ) as tmp:
+            tmp.write(resp.read())
+            tmp_path = Path(tmp.name)
+    except Exception as e:
+        print(f"Error: download failed: {e}", file=sys.stderr)
         sys.exit(1)
+
     password = getpass.getpass("Password: ")
     UNPACK_DEST.mkdir(parents=True, exist_ok=True)
     try:
-        with pyzipper.AESZipFile(zip_path) as zf:
+        with pyzipper.AESZipFile(tmp_path) as zf:
             zf.extractall(path=UNPACK_DEST, pwd=password.encode())
         print(f"Skills unpacked to {UNPACK_DEST}")
     except (RuntimeError, pyzipper.BadZipFile):
         print("Error: wrong password or corrupt zip.", file=sys.stderr)
         sys.exit(1)
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 def cmd_link(args) -> None:

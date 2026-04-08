@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -136,18 +137,22 @@ def link_status(llm_path: Path, skillset: str,
     skills = _skills_in(skillset, registry)
     if not skills:
         return "none"
-    linked = sum(1 for s in skills if (llm_path / s.name).is_symlink())
-    if linked == 0:
+    installed = sum(1 for s in skills if (llm_path / s.name).exists())
+    if installed == 0:
         return "none"
-    return "full" if linked == len(skills) else "partial"
+    return "full" if installed == len(skills) else "partial"
 
 
-def link(llm_path: Path, skillset: str, registry: Registry | None = None) -> None:
+def link(llm_path: Path, skillset: str, registry: Registry | None = None,
+         copy: bool = False) -> None:
     llm_path.mkdir(parents=True, exist_ok=True)
     for skill in _skills_in(skillset, registry):
         target = llm_path / skill.name
         if not target.exists() and not target.is_symlink():
-            target.symlink_to(skill)
+            if copy:
+                shutil.copytree(skill, target)
+            else:
+                target.symlink_to(skill)
 
 
 def unlink(llm_path: Path, skillset: str, registry: Registry | None = None) -> None:
@@ -155,16 +160,18 @@ def unlink(llm_path: Path, skillset: str, registry: Registry | None = None) -> N
         target = llm_path / skill.name
         if target.is_symlink():
             target.unlink()
+        elif target.is_dir():
+            shutil.rmtree(target)
 
 
 # ── Individual-skill link ops ─────────────────────────────────────────────────
 
 def skill_is_linked(llm_path: Path, skill_name: str) -> bool:
-    return (llm_path / skill_name).is_symlink()
+    return (llm_path / skill_name).exists()
 
 
 def link_skill(llm_path: Path, skillset: str, skill_name: str,
-               registry: Registry | None = None) -> None:
+               registry: Registry | None = None, copy: bool = False) -> None:
     llm_path.mkdir(parents=True, exist_ok=True)
     if registry is not None:
         skill = registry[skillset] / skill_name
@@ -172,13 +179,18 @@ def link_skill(llm_path: Path, skillset: str, skill_name: str,
         skill = SKILL_SETS_DIR / skillset / skill_name
     target = llm_path / skill_name
     if not target.exists() and not target.is_symlink():
-        target.symlink_to(skill)
+        if copy:
+            shutil.copytree(skill, target)
+        else:
+            target.symlink_to(skill)
 
 
 def unlink_skill(llm_path: Path, skill_name: str) -> None:
     target = llm_path / skill_name
     if target.is_symlink():
         target.unlink()
+    elif target.is_dir():
+        shutil.rmtree(target)
 
 
 # ── RC file (.divami-skills.toml) ────────────────────────────────────────────────

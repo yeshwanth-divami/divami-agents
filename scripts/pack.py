@@ -6,8 +6,8 @@ Run this before publishing to create divami_skills/skills.zip.
 
 The zip is AES-256 encrypted and NOT committed to git.
 """
-import argparse
 import getpass
+import os
 import sys
 from pathlib import Path
 
@@ -18,13 +18,8 @@ OUTPUT_ZIP = Path(__file__).parent.parent / "divami_skills" / "skills.zip"
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--password", help="Zip password (omit to be prompted)")
-    args = parser.parse_args()
-
-    if args.password:
-        password = args.password
-    else:
+    password = os.environ.get("SKILLS_PASSWORD")
+    if not password:
         password = getpass.getpass("Password for skills.zip: ")
         confirm = getpass.getpass("Confirm password: ")
         if password != confirm:

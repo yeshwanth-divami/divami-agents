@@ -88,6 +88,8 @@ class SkillsApp(App):
         Binding("q", "quit", "Quit"),
         Binding("enter", "toggle", "Expand / Toggle"),
         Binding("space", "toggle", "Expand / Toggle"),
+        Binding("t", "view_toggle", "Global / Local"),
+        Binding("m", "mode_toggle", "Copy / Symlink"),
         Binding("r", "refresh", "Refresh"),
     ]
 
@@ -98,6 +100,8 @@ class SkillsApp(App):
         self._skill_roots = registry
         self._reg: manager.Registry = {}
         self._llms: dict[str, Path] = {}
+        self._show_local: bool = True
+        self._use_copy: bool = True
         self._skillsets: list[str] = []
         self._expanded: set[str] = set()
         self._rows: list[RowMeta] = []
@@ -111,10 +115,12 @@ class SkillsApp(App):
 
     def on_mount(self) -> None:
         self.title = "divami-skills manager"
-        self.sub_title = (
-            "Name col: ENTER=expand  ·  LLM col: ENTER=toggle  ·  R=refresh  ·  Q=quit"
-        )
         self._build_table()
+
+    def _view_llms(self) -> dict[str, Path]:
+        """Return only global or only local LLMs depending on current view."""
+        return {n: p for n, p in self._llms.items()
+                if manager.is_local(n) == self._show_local}
 
     # ── Table construction ────────────────────────────────────────────────────
 
@@ -124,6 +130,15 @@ class SkillsApp(App):
         self._llms = manager.load_all_llms(local_base=self._cwd)
         self._skillsets = manager.discover_skill_sets(self._reg)
 
+        view = self._view_llms()
+        view_label = "Local" if self._show_local else "Global"
+        mode_label = "Copy" if self._use_copy else "Symlink"
+        self.sub_title = (
+            f"[{view_label}] [{mode_label}]  Name: ENTER=expand  "
+            f"·  LLM: ENTER=install/remove  ·  T=Global/Local  ·  M=Copy/Symlink  "
+            f"·  R=refresh  ·  Q=quit"
+        )
+
         table = self.query_one("#matrix", DataTable)
         table.clear(columns=True)
         table.cursor_type = "cell"
@@ -131,21 +146,21 @@ class SkillsApp(App):
 
         # Hidden column labels (still needed for structure/keys)
         table.add_column("", key="__name__")
-        for llm_name in self._llms:
+        for llm_name in view:
             table.add_column("", key=llm_name)
 
         self._rows = []
 
         # ── Row 0: LLM group names ────────────────────────────────────────
         top_row: list[str | Text] = [Text("")]
-        for llm_name in self._llms:
+        for llm_name in view:
             top_row.append(_top_cell(llm_name))
         table.add_row(*top_row, key="__top__")
         self._rows.append(RowMeta(kind="header"))
 
         # ── Row 1: Global / Local labels ──────────────────────────────────
         sub_row: list[str | Text] = [Text("Skill / Set", style="bold dim")]
-        for llm_name in self._llms:
+        for llm_name in view:
             sub_row.append(_sub_cell(llm_name))
         table.add_row(*sub_row, key="__sub__")
         self._rows.append(RowMeta(kind="header"))
@@ -156,7 +171,7 @@ class SkillsApp(App):
             prefix = "▼  " if expanded else "▶  "
 
             cells: list[str | Text] = [prefix + skillset]
-            for llm_name, llm_path in self._llms.items():
+            for llm_name, llm_path in view.items():
                 status = manager.link_status(llm_path, skillset, self._reg)
                 cells.append(_icon_cell(status, llm_name))
             table.add_row(*cells, key=f"ss:{skillset}")
@@ -166,7 +181,7 @@ class SkillsApp(App):
                 for skill_path in manager._skills_in(skillset, self._reg):
                     skill_name = skill_path.name
                     cells = [Text(f"    · {skill_name}", style=_DIM)]
-                    for llm_name, llm_path in self._llms.items():
+                    for llm_name, llm_path in view.items():
                         linked = manager.skill_is_linked(llm_path, skill_name)
                         cells.append(_icon_cell("full" if linked else "none", llm_name))
                     table.add_row(*cells, key=f"sk:{skillset}:{skill_name}")
@@ -211,31 +226,46 @@ class SkillsApp(App):
                 self._build_table(restore_cursor=(row_idx, col_idx))
                 return
 
-            llm_name = list(self._llms.keys())[col_idx - 1]
+            llm_name = list(self._view_llms().keys())[col_idx - 1]
             llm_path = self._llms[llm_name]
             status = manager.link_status(llm_path, meta.skillset, self._reg)
             if status in ("full", "partial"):
                 manager.unlink(llm_path, meta.skillset, self._reg)
-                self._set_status(f"Unlinked all  {meta.skillset}  →  {llm_name}")
+                self._set_status(f"Removed  {meta.skillset}  →  {llm_name}")
             else:
-                manager.link(llm_path, meta.skillset, self._reg)
+                manager.link(llm_path, meta.skillset, self._reg, copy=self._use_copy)
                 n = len(manager._skills_in(meta.skillset, self._reg))
-                self._set_status(f"Linked {n} skills  {meta.skillset}  →  {llm_name}")
+                mode = "Copied" if self._use_copy else "Linked"
+                self._set_status(f"{mode} {n} skills  {meta.skillset}  →  {llm_name}")
 
         elif meta.kind == "skill":
             if col_idx == 0:
                 return
 
-            llm_name = list(self._llms.keys())[col_idx - 1]
+            llm_name = list(self._view_llms().keys())[col_idx - 1]
             llm_path = self._llms[llm_name]
             if manager.skill_is_linked(llm_path, meta.skill):
                 manager.unlink_skill(llm_path, meta.skill)
-                self._set_status(f"Unlinked  {meta.skill}  →  {llm_name}")
+                self._set_status(f"Removed  {meta.skill}  →  {llm_name}")
             else:
-                manager.link_skill(llm_path, meta.skillset, meta.skill, self._reg)
-                self._set_status(f"Linked  {meta.skill}  →  {llm_name}")
+                manager.link_skill(llm_path, meta.skillset, meta.skill, self._reg,
+                                   copy=self._use_copy)
+                mode = "Copied" if self._use_copy else "Linked"
+                self._set_status(f"{mode}  {meta.skill}  →  {llm_name}")
 
         self._build_table(restore_cursor=(row_idx, col_idx))
+
+    def action_view_toggle(self) -> None:
+        self._show_local = not self._show_local
+        table = self.query_one("#matrix", DataTable)
+        self._build_table(restore_cursor=(table.cursor_row, 0))
+
+    def action_mode_toggle(self) -> None:
+        self._use_copy = not self._use_copy
+        mode = "Copy" if self._use_copy else "Symlink"
+        table = self.query_one("#matrix", DataTable)
+        self._build_table(restore_cursor=(table.cursor_row, table.cursor_column))
+        self._set_status(f"Install mode switched to: {mode}")
 
     def action_refresh(self) -> None:
         table = self.query_one("#matrix", DataTable)
