@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Run this before publishing to create divami_skills/skills.zip.
+Run this before publishing to create src/divami_skills/skills.zip.
 
     python scripts/pack.py
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 SKILLS_DIR = Path(__file__).parent.parent / "skills"
-OUTPUT_ZIP = Path(__file__).parent.parent / "divami_skills" / "skills.zip"
+OUTPUT_ZIP = Path(__file__).parent.parent / "src" / "divami_skills" / "skills.zip"
 
 
 def main():

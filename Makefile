@@ -19,4 +19,4 @@ publish: pack
 	.venv/bin/twine upload --repository divami dist/*.whl; \
 	gh release create "v$$VERSION" --title "v$$VERSION" --notes "" \
 		--repo $(REPO) \
-		"divami_skills/skills.zip#skills.zip"
+		"src/divami_skills/skills.zip#skills.zip"
