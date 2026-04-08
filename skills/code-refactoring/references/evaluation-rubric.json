@@ -1,0 +1,60 @@
+{
+  "criteria": [
+    {
+      "name": "Trigger Clarity",
+      "description": "Is it obvious when this skill should be used for refactoring work?",
+      "scores": {
+        "1": "Triggers are vague or describe what the skill does instead of when to use it.",
+        "3": "Triggers are usable but miss some common refactor scenarios.",
+        "5": "Triggers are specific, broad enough, and easy to recognize."
+      }
+    },
+    {
+      "name": "Mechanical Reuse Bias",
+      "description": "Does the skill strongly prefer extraction, reuse, and text-editing moves over retyping?",
+      "scores": {
+        "1": "Mostly encourages fresh code generation.",
+        "3": "Mentions reuse but not as a clear default.",
+        "5": "Makes mechanical reuse the default and generation the fallback."
+      }
+    },
+    {
+      "name": "Negative Code Discipline",
+      "description": "Does the skill prefer net code reduction while protecting features, quality, and maintainability?",
+      "scores": {
+        "1": "Either ignores code reduction or pushes deletion in a way that risks quality and maintainability.",
+        "3": "Encourages simplification but the guardrails are incomplete.",
+        "5": "Strongly prefers deletion and convergence, with explicit protection for features, readability, maintainability, and validation."
+      }
+    },
+    {
+      "name": "Actionability",
+      "description": "Can the workflow be followed step by step on a real codebase?",
+      "scores": {
+        "1": "Too abstract to execute.",
+        "3": "Usable, but some steps are underspecified.",
+        "5": "Concrete, staged, and directly executable."
+      }
+    },
+    {
+      "name": "Tool Accuracy",
+      "description": "Does the skill correctly distinguish Codex-only tools from shell-native commands?",
+      "scores": {
+        "1": "Confuses tool contexts or suggests unavailable commands.",
+        "3": "Mostly accurate with minor ambiguity.",
+        "5": "Explicitly accurate about editing contexts and commands."
+      }
+    },
+    {
+      "name": "Collaboration Quality",
+      "description": "Does the skill clearly mark user decision points and tradeoffs?",
+      "scores": {
+        "1": "No meaningful choice points.",
+        "3": "Some choices are marked but tradeoffs are thin.",
+        "5": "Decision points are clear and tied to real tradeoffs."
+      }
+    }
+  ],
+  "threshold": 4.0,
+  "passing_note": "Average score must be >= 4.0, and any criterion below 3 should be revised before treating the skill as locked."
+}
