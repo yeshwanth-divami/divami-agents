@@ -64,8 +64,14 @@ def _sub_cell(llm_name: str) -> Text:
 def _icon_cell(status: str, llm_name: str) -> Text:
     _, _, _, _, g_icon, l_icon = _palette(llm_name)
     color = l_icon if manager.is_local(llm_name) else g_icon
-    if status == "full":
-        return Text("  ✓  ", style=Style(color=color, bold=True))
+    if status == "full_symlink":
+        return Text(" ✓* ", style=Style(color=color, bold=True))
+    elif status == "full_copy":
+        return Text(" ✓✝︎ ", style=Style(color=color, bold=True))
+    elif status == "global_symlink":
+        return Text(" o* ", style=Style(color=color))
+    elif status == "global_copy":
+        return Text(" o✝︎ ", style=Style(color=color))
     elif status == "partial":
         return Text("  ~  ", style=Style(color=color))
     else:
@@ -74,6 +80,11 @@ def _icon_cell(status: str, llm_name: str) -> Text:
 
 class SkillsApp(App):
     CSS = """
+    #help_primary, #help_secondary {
+        height: 1;
+        padding: 0 1;
+        color: $text-muted;
+    }
     #status {
         height: 1;
         padding: 0 1;
@@ -109,6 +120,8 @@ class SkillsApp(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Vertical():
+            yield Label("", id="help_primary")
+            yield Label("", id="help_secondary")
             yield DataTable(id="matrix", show_header=False)
             yield Label("", id="status")
         yield Footer()
@@ -122,6 +135,47 @@ class SkillsApp(App):
         return {n: p for n, p in self._llms.items()
                 if manager.is_local(n) == self._show_local}
 
+    def _global_llm_path(self, llm_name: str) -> Path | None:
+        if not manager.is_local(llm_name):
+            return self._llms.get(llm_name)
+        return self._llms.get(_base(llm_name))
+
+    def _install_kind(self, llm_path: Path, skill_name: str) -> str | None:
+        target = llm_path / skill_name
+        if target.is_symlink():
+            return "symlink"
+        if target.exists():
+            return "copy"
+        return None
+
+    def _skill_cell_status(self, llm_name: str, llm_path: Path, skill_name: str) -> str:
+        local_kind = self._install_kind(llm_path, skill_name)
+        if local_kind == "symlink":
+            return "full_symlink"
+        if local_kind == "copy":
+            return "full_copy"
+        if manager.is_local(llm_name):
+            global_path = self._global_llm_path(llm_name)
+            if global_path is not None:
+                global_kind = self._install_kind(global_path, skill_name)
+                if global_kind == "symlink":
+                    return "global_symlink"
+                if global_kind == "copy":
+                    return "global_copy"
+        return "none"
+
+    def _skillset_cell_status(self, llm_name: str, llm_path: Path, skillset: str) -> str:
+        skills = manager._skills_in(skillset, self._reg)
+        if not skills:
+            return "none"
+        statuses = [self._skill_cell_status(llm_name, llm_path, skill.name) for skill in skills]
+        if all(status == "none" for status in statuses):
+            return "none"
+        first = statuses[0]
+        if first != "none" and all(status == first for status in statuses):
+            return first
+        return "partial"
+
     # ── Table construction ────────────────────────────────────────────────────
 
     def _build_table(self, restore_cursor: tuple[int, int] | None = None) -> None:
@@ -133,10 +187,13 @@ class SkillsApp(App):
         view = self._view_llms()
         view_label = "Local" if self._show_local else "Global"
         mode_label = "Copy" if self._use_copy else "Symlink"
-        self.sub_title = (
-            f"[{view_label}] [{mode_label}]  Name: ENTER=expand  "
-            f"·  LLM: ENTER=install/remove  ·  T=Global/Local  ·  M=Copy/Symlink  "
-            f"·  R=refresh  ·  Q=quit"
+        self.sub_title = f"[{view_label}] [{mode_label}]"
+        self.query_one("#help_primary", Label).update(
+            "Name: ENTER=expand  ·  LLM: ENTER=install/remove"
+        )
+        self.query_one("#help_secondary", Label).update(
+            "T=Global/Local  ·  M=Copy/Symlink  ·  *=symlink  ·  ✝︎=copy  ·  "
+            "R=refresh  ·  Q=quit"
         )
 
         table = self.query_one("#matrix", DataTable)
@@ -172,7 +229,7 @@ class SkillsApp(App):
 
             cells: list[str | Text] = [prefix + skillset]
             for llm_name, llm_path in view.items():
-                status = manager.link_status(llm_path, skillset, self._reg)
+                status = self._skillset_cell_status(llm_name, llm_path, skillset)
                 cells.append(_icon_cell(status, llm_name))
             table.add_row(*cells, key=f"ss:{skillset}")
             self._rows.append(RowMeta(kind="skillset", skillset=skillset))
@@ -182,8 +239,12 @@ class SkillsApp(App):
                     skill_name = skill_path.name
                     cells = [Text(f"    · {skill_name}", style=_DIM)]
                     for llm_name, llm_path in view.items():
-                        linked = manager.skill_is_linked(llm_path, skill_name)
-                        cells.append(_icon_cell("full" if linked else "none", llm_name))
+                        cells.append(
+                            _icon_cell(
+                                self._skill_cell_status(llm_name, llm_path, skill_name),
+                                llm_name,
+                            )
+                        )
                     table.add_row(*cells, key=f"sk:{skillset}:{skill_name}")
                     self._rows.append(RowMeta(kind="skill", skillset=skillset,
                                               skill=skill_name))
@@ -228,7 +289,7 @@ class SkillsApp(App):
 
             llm_name = list(self._view_llms().keys())[col_idx - 1]
             llm_path = self._llms[llm_name]
-            status = manager.link_status(llm_path, meta.skillset, self._reg)
+            status = self._skillset_cell_status(llm_name, llm_path, meta.skillset)
             if status in ("full", "partial"):
                 manager.unlink(llm_path, meta.skillset, self._reg)
                 self._set_status(f"Removed  {meta.skillset}  →  {llm_name}")

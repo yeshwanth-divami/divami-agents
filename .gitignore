@@ -11,3 +11,11 @@ build/
 skills.zip
 
 .omx
+
+.agents/
+.claude/
+.gemini/
+.github/
+agents/
+
+.sesskey

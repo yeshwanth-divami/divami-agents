@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -130,6 +131,74 @@ def _skills_in(skillset: str, registry: Registry | None = None) -> list[Path]:
     )
 
 
+def _local_base_for_llm_path(llm_path: Path) -> Path | None:
+    for relpath in LOCAL_LLM_RELPATHS.values():
+        rel_parts = tuple(Path(relpath).parts)
+        if tuple(llm_path.parts[-len(rel_parts):]) == rel_parts:
+            return llm_path.parents[len(rel_parts) - 1]
+    return None
+
+
+def _local_relay_path(llm_path: Path, skill_name: str) -> Path | None:
+    local_base = _local_base_for_llm_path(llm_path)
+    if local_base is None:
+        return None
+    return local_base / "agents" / skill_name
+
+
+def _local_consumer_paths(local_base: Path, skill_name: str) -> list[Path]:
+    return [
+        local_base / relpath / skill_name
+        for relpath in LOCAL_LLM_RELPATHS.values()
+    ]
+
+
+def _relative_symlink_target(target: Path, source: Path) -> Path:
+    return Path(
+        os.path.relpath(source, start=target.parent)
+    )
+
+
+def _install_local_relay(
+    llm_path: Path,
+    skill_name: str,
+    source: Path,
+    copy: bool,
+) -> Path | None:
+    relay = _local_relay_path(llm_path, skill_name)
+    if relay is None:
+        return None
+    relay.parent.mkdir(parents=True, exist_ok=True)
+    if relay.is_symlink():
+        relay.unlink()
+    elif relay.exists():
+        shutil.rmtree(relay) if relay.is_dir() else relay.unlink()
+    if copy:
+        shutil.copytree(source, relay)
+    else:
+        relay.symlink_to(
+            _relative_symlink_target(relay, source),
+            target_is_directory=True,
+        )
+    return relay
+
+
+def _prune_local_relay(llm_path: Path, skill_name: str) -> None:
+    relay = _local_relay_path(llm_path, skill_name)
+    local_base = _local_base_for_llm_path(llm_path)
+    if relay is None or local_base is None:
+        return
+    for consumer in _local_consumer_paths(local_base, skill_name):
+        if consumer != llm_path / skill_name and consumer.exists():
+            return
+        if consumer != llm_path / skill_name and consumer.is_symlink():
+            return
+    if relay.is_symlink():
+        relay.unlink()
+    elif relay.is_dir():
+        shutil.rmtree(relay)
+
+
 # ── Skillset-level link ops ───────────────────────────────────────────────────
 
 def link_status(llm_path: Path, skillset: str,
@@ -147,15 +216,22 @@ def link(llm_path: Path, skillset: str, registry: Registry | None = None,
          copy: bool = False) -> None:
     llm_path.mkdir(parents=True, exist_ok=True)
     for skill in _skills_in(skillset, registry):
+        source = skill
+        relay = _install_local_relay(llm_path, skill.name, source, copy)
         target = llm_path / skill.name
         if target.is_symlink():
             target.unlink()
         elif target.exists():
             continue
-        if copy:
-            shutil.copytree(skill, target)
+        if relay is not None:
+            target.symlink_to(
+                _relative_symlink_target(target, relay),
+                target_is_directory=True,
+            )
+        elif copy:
+            shutil.copytree(source, target)
         else:
-            target.symlink_to(skill)
+            target.symlink_to(source, target_is_directory=True)
 
 
 def unlink(llm_path: Path, skillset: str, registry: Registry | None = None) -> None:
@@ -165,6 +241,7 @@ def unlink(llm_path: Path, skillset: str, registry: Registry | None = None) -> N
             target.unlink()
         elif target.is_dir():
             shutil.rmtree(target)
+        _prune_local_relay(llm_path, skill.name)
 
 
 # ── Individual-skill link ops ─────────────────────────────────────────────────
@@ -180,15 +257,21 @@ def link_skill(llm_path: Path, skillset: str, skill_name: str,
         skill = registry[skillset] / skill_name
     else:
         skill = SKILL_SETS_DIR / skillset / skill_name
+    relay = _install_local_relay(llm_path, skill_name, skill, copy)
     target = llm_path / skill_name
     if target.is_symlink():
         target.unlink()
     elif target.exists():
         return
-    if copy:
+    if relay is not None:
+        target.symlink_to(
+            _relative_symlink_target(target, relay),
+            target_is_directory=True,
+        )
+    elif copy:
         shutil.copytree(skill, target)
     else:
-        target.symlink_to(skill)
+        target.symlink_to(skill, target_is_directory=True)
 
 
 def unlink_skill(llm_path: Path, skill_name: str) -> None:
@@ -197,6 +280,7 @@ def unlink_skill(llm_path: Path, skill_name: str) -> None:
         target.unlink()
     elif target.is_dir():
         shutil.rmtree(target)
+    _prune_local_relay(llm_path, skill_name)
 
 
 # ── RC file (.divami-skills.toml) ────────────────────────────────────────────────

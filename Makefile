@@ -8,7 +8,8 @@ venv:
 	uv pip install --python .venv pyzipper textual build twine tomli
 
 pack:
-	.venv/bin/python scripts/pack.py
+	DIVAMI_AGENTS_PASSWORD=$${DIVAMI_AGENTS_PASSWORD:?DIVAMI_AGENTS_PASSWORD is required} \
+		.venv/bin/python scripts/pack.py
 
 # Usage: make publish [BUMP=minor]
 publish: pack

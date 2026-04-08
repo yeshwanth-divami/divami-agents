@@ -1,11 +1,11 @@
 import argparse
-import getpass
+import hashlib
 import os
+import shutil
 import sys
 from pathlib import Path
 
 import pyzipper
-
 from . import manager
 
 SKILLSET_NAME = "divami-skills"
@@ -68,10 +68,106 @@ def _unpack_skillset_name(skills_folder: str | None, skillset_name: str | None) 
     return SKILLSET_NAME
 
 
-def _extract_zip(tmp_path: Path, dest: Path, password: str | None = None) -> None:
+def _extract_zip(tmp_path: Path, dest: Path, password: str) -> None:
     with pyzipper.AESZipFile(tmp_path) as zf:
-        pwd = password.encode() if password else None
-        zf.extractall(path=dest, pwd=pwd)
+        zf.extractall(path=dest, pwd=password.encode())
+
+
+def _iter_skill_dirs(path: Path) -> list[Path]:
+    if not path.exists():
+        return []
+    return sorted(
+        [item for item in path.iterdir() if item.is_dir() and not item.name.startswith(".")],
+        key=lambda p: p.name,
+    )
+
+
+def _dir_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    for item in sorted(path.rglob("*"), key=lambda p: p.relative_to(path).as_posix()):
+        rel = item.relative_to(path).as_posix()
+        digest.update(rel.encode())
+        if item.is_symlink():
+            digest.update(b"symlink")
+            digest.update(os.readlink(item).encode())
+        elif item.is_file():
+            digest.update(b"file")
+            digest.update(item.read_bytes())
+        elif item.is_dir():
+            digest.update(b"dir")
+    return digest.hexdigest()
+
+
+def _conflicting_skills(existing_dir: Path, incoming_dir: Path) -> list[str]:
+    conflicts: list[str] = []
+    existing = {skill.name: skill for skill in _iter_skill_dirs(existing_dir)}
+    for incoming in _iter_skill_dirs(incoming_dir):
+        current = existing.get(incoming.name)
+        if current is not None and _dir_digest(current) != _dir_digest(incoming):
+            conflicts.append(incoming.name)
+    return conflicts
+
+
+def _prompt_conflict_choices(conflicts: list[str]) -> dict[str, str]:
+    print("Conflicting skills found:")
+    for skill in conflicts:
+        print(f"  - {skill}")
+    if not sys.stdin.isatty():
+        print("Error: conflicting skills require interactive selection.", file=sys.stderr)
+        sys.exit(1)
+
+    choices: dict[str, str] = {}
+    apply_all: str | None = None
+    for skill in conflicts:
+        if apply_all is not None:
+            choices[skill] = apply_all
+            continue
+        while True:
+            response = input(
+                f"Use [o]ld or [n]ew for {skill}? "
+                "[a]=all old, [u]=all new: "
+            ).strip().lower()
+            if response in {"o", "old"}:
+                choices[skill] = "old"
+                break
+            if response in {"n", "new"}:
+                choices[skill] = "new"
+                break
+            if response == "a":
+                apply_all = "old"
+                choices[skill] = "old"
+                break
+            if response == "u":
+                apply_all = "new"
+                choices[skill] = "new"
+                break
+        print(f"  {skill}: {choices[skill]}")
+    return choices
+
+
+def _replace_tree(source: Path, dest: Path) -> None:
+    if dest.is_symlink() or dest.is_file():
+        dest.unlink()
+    elif dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(source, dest)
+
+
+def _merge_unpacked_skills(incoming_dir: Path, dest_dir: Path) -> None:
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    conflicts = _conflicting_skills(dest_dir, incoming_dir)
+    choices = _prompt_conflict_choices(conflicts) if conflicts else {}
+
+    existing = {skill.name: skill for skill in _iter_skill_dirs(dest_dir)}
+    for incoming in _iter_skill_dirs(incoming_dir):
+        current = existing.get(incoming.name)
+        if current is None:
+            shutil.copytree(incoming, dest_dir / incoming.name)
+            continue
+        if incoming.name not in choices:
+            continue
+        if choices[incoming.name] == "new":
+            _replace_tree(incoming, dest_dir / incoming.name)
 
 
 def _register_local_skillset(source_dir: Path, skillset_name: str) -> None:
@@ -109,7 +205,6 @@ def _register_local_skillset(source_dir: Path, skillset_name: str) -> None:
 def cmd_unpack(args) -> None:
     import tempfile
     import urllib.request
-    from importlib.metadata import version
 
     skillset_name = _unpack_skillset_name(args.skills_folder, args.skillset_name)
     if args.skills_folder:
@@ -117,10 +212,13 @@ def cmd_unpack(args) -> None:
         _register_local_skillset(source_dir, skillset_name)
         return
 
-    v = version("divami-agents")
-    url = f"https://github.com/{GITHUB_REPO}/releases/download/v{v}/skills.zip"
+    url = f"https://github.com/{GITHUB_REPO}/releases/latest/download/skills.zip"
     dest = UNPACK_DEST
-    print(f"Downloading built-in skills from GitHub release v{v} ...")
+    password = os.environ.get("DIVAMI_AGENTS_PASSWORD")
+    if not password:
+        print("Error: DIVAMI_AGENTS_PASSWORD is required.", file=sys.stderr)
+        sys.exit(1)
+    print("Downloading built-in skills from latest GitHub release ...")
     try:
         with urllib.request.urlopen(url) as resp, tempfile.NamedTemporaryFile(
             suffix=".zip", delete=False
@@ -131,19 +229,14 @@ def cmd_unpack(args) -> None:
         print(f"Error: download failed: {e}", file=sys.stderr)
         sys.exit(1)
 
-    dest.mkdir(parents=True, exist_ok=True)
     try:
-        try:
-            _extract_zip(tmp_path, dest)
-        except RuntimeError:
-            password = os.environ.get("SKILLS_PASSWORD")
-            if not password:
-                print("Downloaded archive is encrypted; password required.")
-                password = getpass.getpass("Password: ")
-            _extract_zip(tmp_path, dest, password)
+        with tempfile.TemporaryDirectory() as extract_dir:
+            staged = Path(extract_dir)
+            _extract_zip(tmp_path, staged, password)
+            _merge_unpacked_skills(staged, dest)
         print(f"Skills unpacked to {dest}")
     except (RuntimeError, pyzipper.BadZipFile):
-        print("Error: wrong password or corrupt zip.", file=sys.stderr)
+        print("Error: wrong DIVAMI_AGENTS_PASSWORD or corrupt zip.", file=sys.stderr)
         sys.exit(1)
     finally:
         tmp_path.unlink(missing_ok=True)
@@ -252,7 +345,7 @@ def main():
     parser = argparse.ArgumentParser(prog="divami-skills")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    p_unpack = sub.add_parser("unpack", help=f"Unpack built-in skills to {UNPACK_DEST}")
+    p_unpack = sub.add_parser("unpack", help=f"Unpack built-in skills to {UNPACK_DEST}. Run this command first, before running tui command")
     p_unpack.add_argument(
         "--skills-folder",
         metavar="DIR",
