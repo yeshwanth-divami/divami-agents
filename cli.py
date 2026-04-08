@@ -153,6 +153,13 @@ def cmd_init(args) -> None:
     print("Edit it to specify which skills each LLM needs, then run `divami-skills sync`.")
 
 
+def cmd_update_toml(args) -> None:
+    cwd = Path(args.cwd) if args.cwd else Path.cwd()
+    reg = _registry(args)
+    rc_path = manager.dump_rc(cwd, reg)
+    print(f"Written: {rc_path}")
+
+
 def cmd_tui(args) -> None:
     from .tui import SkillsApp
     cwd = Path(args.cwd) if args.cwd else Path.cwd()
@@ -191,16 +198,20 @@ def main():
     p_init.add_argument("--force", action="store_true", help="Overwrite existing file")
     _add_common(p_init)
 
+    p_update = sub.add_parser("update-toml", help=f"Write current linked state to {manager.RC_FILENAME}")
+    _add_common(p_update)
+
     args = parser.parse_args()
 
     dispatch = {
-        "unpack": cmd_unpack,
-        "link":   cmd_link,
-        "unlink": cmd_unlink,
-        "list":   cmd_list,
-        "sync":   cmd_sync,
-        "init":   cmd_init,
-        "tui":    cmd_tui,
+        "unpack":      cmd_unpack,
+        "link":        cmd_link,
+        "unlink":      cmd_unlink,
+        "list":        cmd_list,
+        "sync":        cmd_sync,
+        "init":        cmd_init,
+        "update-toml": cmd_update_toml,
+        "tui":         cmd_tui,
     }
 
     if args.command in dispatch:
