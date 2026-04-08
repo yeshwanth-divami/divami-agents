@@ -1,0 +1,43 @@
+{
+  "project": "",
+  "description": "",
+  "client": "",
+  "created": "",
+  "daksh_version": "0.2",
+
+  "weight_class": "",
+  "weight_rationale": "",
+
+  "rules": {
+    "stages_combined": [],
+    "approvals_per_gate": 2,
+    "open_questions": "mandatory",
+    "cross_module_contracts": true,
+    "jira_sync": "required",
+    "tend_frequency": "per_sprint"
+  },
+
+  "team_roster": [],
+
+  "modules": [],
+
+  "stages": {},
+
+  "contracts": {},
+
+  "traceability": {},
+
+  "change_records": {},
+
+  "required_skills": ["doc-narrator", "vyasa"],
+
+  "jira": {
+    "project_key": null,
+    "board_id": null,
+    "synced_at": null,
+    "ticket_map": {},
+    "user_map": {},
+    "workflow_preset": "divami-engineering-jira-standard",
+    "done_statuses": ["Done", "Done - Not Reproducible", "Done - Not A Bug"]
+  }
+}

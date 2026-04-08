@@ -1,0 +1,13 @@
+# Daksh pipeline document order — maintained by /daksh init and each stage.
+# Add new entries here as stages complete. Vyasa displays docs in this order.
+order = [
+  "client-context.md",
+  "vision.md",
+  "business-requirements.md",
+  "implementation-roadmap.md",
+  "implementation",
+  "glossary.md",
+  "backlog.md"
+]
+folders_first = false
+ignore = ["client"]

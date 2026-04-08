@@ -1,4 +1,3 @@
-PASSWORD = ai@divami@2026
 BUMP     = patch  # patch | minor | major
 REPO     = yeshwanth-divami/divami-skills-dist
 
@@ -9,10 +8,9 @@ venv:
 	uv pip install --python .venv pyzipper textual build twine tomli
 
 pack:
-	@test -n "$(PASSWORD)" || { echo "ERROR: PASSWORD is required"; exit 1; }
-	SKILLS_PASSWORD=$(PASSWORD) .venv/bin/python scripts/pack.py
+	.venv/bin/python scripts/pack.py
 
-# Usage: make publish PASSWORD=xxx [BUMP=minor]
+# Usage: make publish [BUMP=minor]
 publish: pack
 	uv version --bump $(BUMP)
 	VERSION=$$(grep '^version' pyproject.toml | head -1 | sed 's/.*"\(.*\)"$$/\1/'); \

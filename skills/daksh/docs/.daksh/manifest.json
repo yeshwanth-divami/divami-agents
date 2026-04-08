@@ -1,0 +1,457 @@
+{
+  "project": "daksh",
+  "description": "Divami's process skill for AI-assisted software engineering",
+  "client": "Divami",
+  "created": "2026-03-28",
+  "daksh_version": "0.2",
+  "weight_class": "small",
+  "weight_rationale": "< 4 weeks timeline, < 3 modules, internal product, solo maintainer",
+  "rules": {
+    "stages_combined": [
+      "00+10",
+      "40a+40b"
+    ],
+    "approvals_per_gate": 1,
+    "open_questions": "optional",
+    "cross_module_contracts": false,
+    "jira_sync": "mandatory",
+    "tend_frequency": "end_of_project"
+  },
+  "team_roster": [
+    {
+      "name": "Yeshwanth",
+      "role": "PTL",
+      "email": null
+    },
+    {
+      "name": "TBD",
+      "role": "TL",
+      "email": null
+    }
+  ],
+  "modules": [
+    "PREFLIGHT",
+    "JIRA",
+    "BROWNFIELD"
+  ],
+  "stages": {
+    "00+10": {
+      "status": "approved",
+      "output": [
+        "docs/client-context.md",
+        "docs/vision.md"
+      ],
+      "locked_by": null,
+      "doc_hash": {
+        "docs/client-context.md": "7cb517f5529500a11067fb2eb468cdc9c9a0e2a0c60ee8cc1dd9ec4e91f1683f",
+        "docs/vision.md": "b7e12a442d7361069b3331df1f556a98fc9a03fc136355d161a2f9da0ea546be"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/client-context.md": "62a070fdb0d0b265a98b724fe4a94c4cb2681484c9ad7f4f396ce604f7601c02",
+            "docs/vision.md": "8197576e9a548f63182e0d6ececd7aa00256c97e4f0a3cbdf14f0ba6f4326d3c"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/client-context.md": "b2bc43b3662ea858d9392cb3d5de47b51dd8a8b23d228f5e36654b6ab4d0a01c",
+            "docs/vision.md": "70ead994e01e54a227b3bfc24cf7aed6be764cbf40e666440cf234fe8d3e4a91"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/client-context.md": "089e761b0ea2049cb6afe20543734e9e8b90847b36276494191733bf2fb593c2",
+            "docs/vision.md": "a410e029c32dc5bc3fa1dc903d7d943bed3f9d899a809223b623eea938ce9ce4"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/client-context.md": "1236be2edb0bd5f4740d0eddedc8c4ee9dab6e260e11e955f348695c27e070a5",
+            "docs/vision.md": "a6387a2dc93bfd310431fafe05dec402c52c2db366a95567032ec2fa57ed6434",
+            "docs/business-requirements.md": "8b126b3597b43e6aa53a154b92c4cbcc75e08d059a46de57fa6a83519545056a",
+            "docs/implementation/BROWNFIELD/prd.md": "b917d22965c6f5f8f27a58293ce94ae43e7f8c3f6d1ae993aae22782b022a5e1"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/client-context.md": "7cb517f5529500a11067fb2eb468cdc9c9a0e2a0c60ee8cc1dd9ec4e91f1683f",
+            "docs/vision.md": "b7e12a442d7361069b3331df1f556a98fc9a03fc136355d161a2f9da0ea546be"
+          }
+        }
+      ],
+      "revision_history": [
+        {
+          "flagged_by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "reason": "Added Tools & Integrations section with Jira project key and board ID"
+        }
+      ]
+    },
+    "20": {
+      "status": "approved",
+      "output": "docs/business-requirements.md",
+      "locked_by": null,
+      "doc_hash": {
+        "docs/business-requirements.md": "8b79e1b8b9238662d660c2fe1153ae916b8a1752757ec2400a06ce9b2319f898"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/business-requirements.md": "9a495449aacfcd4dfbf4a9735e3ed901245781bd74674cf1d782edd3602e062d"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/client-context.md": "1236be2edb0bd5f4740d0eddedc8c4ee9dab6e260e11e955f348695c27e070a5",
+            "docs/vision.md": "a6387a2dc93bfd310431fafe05dec402c52c2db366a95567032ec2fa57ed6434",
+            "docs/business-requirements.md": "8b126b3597b43e6aa53a154b92c4cbcc75e08d059a46de57fa6a83519545056a",
+            "docs/implementation/BROWNFIELD/prd.md": "b917d22965c6f5f8f27a58293ce94ae43e7f8c3f6d1ae993aae22782b022a5e1"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/business-requirements.md": "8b79e1b8b9238662d660c2fe1153ae916b8a1752757ec2400a06ce9b2319f898"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "30": {
+      "status": "approved",
+      "output": "docs/implementation-roadmap.md",
+      "locked_by": null,
+      "doc_hash": {
+        "docs/implementation-roadmap.md": "ca373004a331deb7cd3f4eca9154deba899f43bde7c7e09aced8dd20b80681aa"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation-roadmap.md": "a79c792ef72844d9c816ab6a398c5a5002e7058d44f54b4d5dc3a09ae1b08ab8"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation-roadmap.md": "ca373004a331deb7cd3f4eca9154deba899f43bde7c7e09aced8dd20b80681aa"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "40a+40b:PREFLIGHT": {
+      "status": "approved",
+      "output": [
+        "docs/implementation/PREFLIGHT/prd.md",
+        "docs/implementation/PREFLIGHT/trd.md"
+      ],
+      "locked_by": null,
+      "doc_hash": {
+        "docs/implementation/PREFLIGHT/prd.md": "d0a1c03506f72a0e169f499faa24d099f3dc5398056cf0c283f60f179eaec512",
+        "docs/implementation/PREFLIGHT/trd.md": "7c68f79e8ca72ee59a1b78c8bc42bbf25aa783554e3de824c160fea7a93d1fd8"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation/PREFLIGHT/prd.md": "a88e35528eb1f560573329fe973b392a4e5eaa193f3ddff66e14bf93d621b875",
+            "docs/implementation/PREFLIGHT/trd.md": "8eadaffb81d3eed81981390c2f9abe1aea7661d0903db17299bf5548e62b7228"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation/PREFLIGHT/prd.md": "d0a1c03506f72a0e169f499faa24d099f3dc5398056cf0c283f60f179eaec512",
+            "docs/implementation/PREFLIGHT/trd.md": "7c68f79e8ca72ee59a1b78c8bc42bbf25aa783554e3de824c160fea7a93d1fd8"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "40c:PREFLIGHT": {
+      "status": "approved",
+      "output": "docs/implementation/PREFLIGHT/tasks.md",
+      "locked_by": null,
+      "doc_hash": {
+        "docs/implementation/PREFLIGHT/tasks.md": "b4fa7c4a0dede864b3372eeeeb0f60f4efddce983ffbdcd3cac8408e408abcd3"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation/PREFLIGHT/tasks.md": "b4fa7c4a0dede864b3372eeeeb0f60f4efddce983ffbdcd3cac8408e408abcd3"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "50:PREFLIGHT": {
+      "status": "not_started",
+      "output": "docs/implementation/PREFLIGHT/tasks.md",
+      "locked_by": null,
+      "doc_hash": null,
+      "approvals": [],
+      "revision_history": []
+    },
+    "40a+40b:JIRA": {
+      "status": "approved",
+      "output": [
+        "docs/implementation/JIRA/prd.md",
+        "docs/implementation/JIRA/trd.md"
+      ],
+      "locked_by": null,
+      "doc_hash": {
+        "docs/implementation/JIRA/prd.md": "125847b4702687db86bd61038b22d9e6c126edda45896291af54b03622ee1406",
+        "docs/implementation/JIRA/trd.md": "68fbf2b9f7404c5473cca83afbee3496acc30669c6778ba98ea4d637c532bbf6"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation/JIRA/prd.md": "125847b4702687db86bd61038b22d9e6c126edda45896291af54b03622ee1406",
+            "docs/implementation/JIRA/trd.md": "68fbf2b9f7404c5473cca83afbee3496acc30669c6778ba98ea4d637c532bbf6"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "40c:JIRA": {
+      "status": "approved",
+      "output": "docs/implementation/JIRA/tasks.md",
+      "locked_by": null,
+      "doc_hash": {
+        "docs/implementation/JIRA/tasks.md": "6c6032c407f4ba09e97576a1da2a57e7ecb25900347fe448d7958af997b64324"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-28",
+          "doc_hash": {
+            "docs/implementation/JIRA/tasks.md": "6c6032c407f4ba09e97576a1da2a57e7ecb25900347fe448d7958af997b64324"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "50:JIRA": {
+      "status": "not_started",
+      "output": "docs/implementation/JIRA/tasks.md",
+      "locked_by": null,
+      "doc_hash": null,
+      "approvals": [],
+      "revision_history": []
+    },
+    "40a+40b:BROWNFIELD": {
+      "status": "approved",
+      "output": [
+        "docs/implementation/BROWNFIELD/prd.md",
+        "docs/implementation/BROWNFIELD/trd.md"
+      ],
+      "locked_by": null,
+      "doc_hash": {
+        "docs/implementation/BROWNFIELD/prd.md": "f4e8fd5adfaea637f75a17c20f40d32e7bf3ae5544bd3e9aa19fecf5332d16a6"
+      },
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/client-context.md": "1236be2edb0bd5f4740d0eddedc8c4ee9dab6e260e11e955f348695c27e070a5",
+            "docs/vision.md": "a6387a2dc93bfd310431fafe05dec402c52c2db366a95567032ec2fa57ed6434",
+            "docs/business-requirements.md": "8b126b3597b43e6aa53a154b92c4cbcc75e08d059a46de57fa6a83519545056a",
+            "docs/implementation/BROWNFIELD/prd.md": "b917d22965c6f5f8f27a58293ce94ae43e7f8c3f6d1ae993aae22782b022a5e1"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/implementation/BROWNFIELD/prd.md": "1e1692d00601d649fd76b85c147dccd8302fa7039ff79e126e79f33323b8335a"
+          }
+        },
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30",
+          "doc_hash": {
+            "docs/implementation/BROWNFIELD/prd.md": "f4e8fd5adfaea637f75a17c20f40d32e7bf3ae5544bd3e9aa19fecf5332d16a6"
+          }
+        }
+      ],
+      "revision_history": []
+    },
+    "40c:BROWNFIELD": {
+      "status": "not_started",
+      "output": "docs/implementation/BROWNFIELD/tasks.md",
+      "locked_by": null,
+      "doc_hash": {},
+      "approvals": [],
+      "revision_history": []
+    },
+    "50:BROWNFIELD": {
+      "status": "not_started",
+      "output": "docs/implementation/BROWNFIELD/tasks.md",
+      "locked_by": null,
+      "doc_hash": {},
+      "approvals": [],
+      "revision_history": []
+    }
+  },
+  "contracts": {},
+  "traceability": {
+    "TASK-PREFLIGHT-001": {
+      "status": "done"
+    },
+    "TASK-PREFLIGHT-002": {
+      "status": "done",
+      "time_blocks": [
+        {
+          "start": "2026-03-29T06:04:29.174641+00:00",
+          "end": "2026-03-29T06:09:45.938587+00:00",
+          "jira_worklog_id": null
+        }
+      ]
+    },
+    "TASK-PREFLIGHT-003": {
+      "status": "done",
+      "time_blocks": [
+        {
+          "start": "2026-03-29T23:12:36.529535+00:00",
+          "end": "2026-03-29T23:13:14.393214+00:00",
+          "jira_worklog_id": null
+        },
+        {
+          "start": "2026-03-29T23:29:48.117510+00:00",
+          "end": "2026-03-29T23:31:39.726603+00:00",
+          "jira_worklog_id": null
+        }
+      ]
+    },
+    "TASK-PREFLIGHT-004": {
+      "status": "done",
+      "time_blocks": [
+        {
+          "start": "2026-03-29T23:36:30.443384+00:00",
+          "end": "2026-03-29T23:46:17.543637+00:00",
+          "jira_worklog_id": "70455"
+        }
+      ]
+    },
+    "TASK-PREFLIGHT-005": {
+      "status": "done",
+      "time_blocks": [
+        {
+          "start": "2026-03-30T00:06:00.000000+00:00",
+          "end": "2026-03-30T00:09:00.000000+00:00",
+          "jira_worklog_id": null
+        }
+      ]
+    },
+    "TASK-BROWNFIELD-001": {
+      "parent": "CR-001",
+      "children": [],
+      "stage": "50",
+      "module": "BROWNFIELD",
+      "status": "todo"
+    }
+  },
+  "required_skills": [
+    "doc-narrator",
+    "vyasa"
+  ],
+  "jira": {
+    "project_key": "AD",
+    "board_id": 1094,
+    "synced_at": "2026-03-30T16:26:22.144206+00:00",
+    "done_statuses": [
+      "Done",
+      "Closed",
+      "Resolved"
+    ],
+    "ticket_map": {
+      "PREFLIGHT_epic": "AD-229",
+      "JIRA_epic": "AD-230",
+      "TASK-PREFLIGHT-001": "AD-231",
+      "TASK-PREFLIGHT-002": "AD-232",
+      "TASK-PREFLIGHT-003": "AD-233",
+      "TASK-PREFLIGHT-004": "AD-234",
+      "TASK-PREFLIGHT-005": "AD-235",
+      "TASK-JIRA-001": "AD-236",
+      "TASK-JIRA-002": "AD-237",
+      "TASK-JIRA-003": "AD-238",
+      "TASK-JIRA-004": "AD-239",
+      "TASK-JIRA-005": "AD-240",
+      "TASK-JIRA-006": "AD-241",
+      "TASK-JIRA-007": "AD-242",
+      "TASK-JIRA-008": "AD-243",
+      "BROWNFIELD_epic": "AD-246"
+    },
+    "user_map": {}
+  },
+  "change_records": {
+    "CR-001": {
+      "module": "BROWNFIELD",
+      "path": "docs/implementation/BROWNFIELD/change-records/CR-001.md",
+      "status": "RESOLVED",
+      "raised_by": "Yeshwanth",
+      "date": "2026-03-29",
+      "tier": "prd",
+      "touched_docs": [
+        "docs/client-context.md",
+        "docs/vision.md",
+        "docs/business-requirements.md",
+        "docs/implementation/BROWNFIELD/prd.md"
+      ],
+      "change_task": "TASK-BROWNFIELD-001",
+      "change_summary": "Add brownfield support \u2014 Daksh currently assumes greenfield only",
+      "approvals": [
+        {
+          "by": "Yeshwanth",
+          "role": "PTL",
+          "date": "2026-03-30"
+        }
+      ]
+    }
+  }
+}

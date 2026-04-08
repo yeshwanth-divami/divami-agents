@@ -1,0 +1,12 @@
+- i guess computing Compute SHA-256 hashes for all approved stage output files manually is tedious. you should write a script to auto compare manifest with the files and let the script tell what all are drifting
+- daksh is not respecting task, story, subtask. everythign it creates is a story.
+- Git Process Finetuning:
+    - commit message
+    - branch naming
+    - PR naming
+  and we should make /daksh init learn these strategies, somehow.
+- Jira Process Finetuning:
+    - JIRA ticket naming
+    - JIRA ticket description template
+    - JIRA ticket acceptance criteria template
+    - JIRA ticket journey template

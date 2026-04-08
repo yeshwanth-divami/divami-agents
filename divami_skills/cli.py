@@ -1,5 +1,6 @@
 import argparse
 import getpass
+import os
 import sys
 from pathlib import Path
 
@@ -50,13 +51,75 @@ def _registry(args) -> manager.Registry:
 GITHUB_REPO = "yeshwanth-divami/divami-skills-dist"
 
 
-def cmd_unpack(_args) -> None:
+def _resolve_skills_folder(skills_folder: str | None) -> Path:
+    if skills_folder:
+        root = Path(skills_folder).expanduser().resolve()
+        if root.name == "skills":
+            return root
+        return root / "skills"
+    return UNPACK_DEST
+
+
+def _unpack_skillset_name(skills_folder: str | None, skillset_name: str | None) -> str:
+    if skillset_name:
+        return skillset_name
+    if skills_folder:
+        return _resolve_skills_folder(skills_folder).parent.name
+    return SKILLSET_NAME
+
+
+def _extract_zip(tmp_path: Path, dest: Path, password: str | None = None) -> None:
+    with pyzipper.AESZipFile(tmp_path) as zf:
+        pwd = password.encode() if password else None
+        zf.extractall(path=dest, pwd=pwd)
+
+
+def _register_local_skillset(source_dir: Path, skillset_name: str) -> None:
+    target = manager.SKILL_SETS_DIR / skillset_name
+    manager.SKILL_SETS_DIR.mkdir(parents=True, exist_ok=True)
+
+    if target.is_symlink():
+        if target.resolve() == source_dir.resolve():
+            print(f"Skill-set already registered: {skillset_name} -> {source_dir}")
+            return
+        print(
+            f"Error: skill-set '{skillset_name}' already points to {target.resolve()}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if target.exists():
+        print(
+            f"Error: skill-set target already exists and is not a symlink: {target}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if not source_dir.is_dir():
+        print(f"Error: skills folder not found: {source_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    target.symlink_to(source_dir, target_is_directory=True)
+    print(
+        f"Registered local skill-set from {source_dir} "
+        f"at {target}/ as a softlink"
+    )
+
+
+def cmd_unpack(args) -> None:
     import tempfile
     import urllib.request
     from importlib.metadata import version
 
+    skillset_name = _unpack_skillset_name(args.skills_folder, args.skillset_name)
+    if args.skills_folder:
+        source_dir = _resolve_skills_folder(args.skills_folder)
+        _register_local_skillset(source_dir, skillset_name)
+        return
+
     v = version("divami-agents")
     url = f"https://github.com/{GITHUB_REPO}/releases/download/v{v}/skills.zip"
+    dest = UNPACK_DEST
     print(f"Downloading built-in skills from GitHub release v{v} ...")
     try:
         with urllib.request.urlopen(url) as resp, tempfile.NamedTemporaryFile(
@@ -68,12 +131,17 @@ def cmd_unpack(_args) -> None:
         print(f"Error: download failed: {e}", file=sys.stderr)
         sys.exit(1)
 
-    password = getpass.getpass("Password: ")
-    UNPACK_DEST.mkdir(parents=True, exist_ok=True)
+    dest.mkdir(parents=True, exist_ok=True)
     try:
-        with pyzipper.AESZipFile(tmp_path) as zf:
-            zf.extractall(path=UNPACK_DEST, pwd=password.encode())
-        print(f"Skills unpacked to {UNPACK_DEST}")
+        try:
+            _extract_zip(tmp_path, dest)
+        except RuntimeError:
+            password = os.environ.get("SKILLS_PASSWORD")
+            if not password:
+                print("Downloaded archive is encrypted; password required.")
+                password = getpass.getpass("Password: ")
+            _extract_zip(tmp_path, dest, password)
+        print(f"Skills unpacked to {dest}")
     except (RuntimeError, pyzipper.BadZipFile):
         print("Error: wrong password or corrupt zip.", file=sys.stderr)
         sys.exit(1)
@@ -184,7 +252,25 @@ def main():
     parser = argparse.ArgumentParser(prog="divami-skills")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    sub.add_parser("unpack", help=f"Unpack built-in skills to {UNPACK_DEST}")
+    p_unpack = sub.add_parser("unpack", help=f"Unpack built-in skills to {UNPACK_DEST}")
+    p_unpack.add_argument(
+        "--skills-folder",
+        metavar="DIR",
+        help=(
+            "Use a local skill-set source instead of downloading from GitHub. "
+            "If the path is a repo root, the command uses <path>/skills; if "
+            "the path already ends with skills, it uses that directory directly."
+        ),
+    )
+    p_unpack.add_argument(
+        "--skillset-name",
+        metavar="NAME",
+        help=(
+            "Name to register under ~/agents/skill-sets when --skills-folder "
+            "is set. Defaults to the parent folder name of the resolved skills "
+            "directory."
+        ),
+    )
 
     p_tui = sub.add_parser("tui", help="Interactive TUI to manage skill-set links")
     _add_common(p_tui)
