@@ -148,11 +148,14 @@ def link(llm_path: Path, skillset: str, registry: Registry | None = None,
     llm_path.mkdir(parents=True, exist_ok=True)
     for skill in _skills_in(skillset, registry):
         target = llm_path / skill.name
-        if not target.exists() and not target.is_symlink():
-            if copy:
-                shutil.copytree(skill, target)
-            else:
-                target.symlink_to(skill)
+        if target.is_symlink():
+            target.unlink()
+        elif target.exists():
+            continue
+        if copy:
+            shutil.copytree(skill, target)
+        else:
+            target.symlink_to(skill)
 
 
 def unlink(llm_path: Path, skillset: str, registry: Registry | None = None) -> None:
@@ -178,11 +181,14 @@ def link_skill(llm_path: Path, skillset: str, skill_name: str,
     else:
         skill = SKILL_SETS_DIR / skillset / skill_name
     target = llm_path / skill_name
-    if not target.exists() and not target.is_symlink():
-        if copy:
-            shutil.copytree(skill, target)
-        else:
-            target.symlink_to(skill)
+    if target.is_symlink():
+        target.unlink()
+    elif target.exists():
+        return
+    if copy:
+        shutil.copytree(skill, target)
+    else:
+        target.symlink_to(skill)
 
 
 def unlink_skill(llm_path: Path, skill_name: str) -> None:
