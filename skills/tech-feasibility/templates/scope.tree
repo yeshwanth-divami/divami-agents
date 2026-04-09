@@ -1,0 +1,63 @@
+# SCOPE TREE FORMAT — spec + example
+#
+# Purpose: human-reviewable intermediate before Excel generation.
+# One file per project: tech-feasibility-analyses/<codename>/scope.tree
+#
+# Hierarchy:
+#   [Module]              — top-level grouping, square brackets
+#       Feature           — 4-space indent, plain text
+#           Sub Feature   CMPLX  COMP  FF  PHASE  — 8-space indent + attrs
+#
+# Attribute abbreviations (space-separated, fixed order):
+#   Complexity : XS | S | M | L | XL
+#   Component  : FE (Frontend) | BE (Backend) | FS (Fullstack → writes both)
+#   Form Factor: R (Responsive) | W (Web) | MN (Mobile Native) | MH (Mobile Hybrid)
+#   Phase      : P1 | P2 | P3
+#   #Pages     : optional integer suffix, default 3
+#
+# Rules:
+#   - Blank line between modules (readability only, ignored by parser)
+#   - Trailing spaces in attribute columns are ignored
+#   - Unknown abbreviations are rejected by generate-scope-xlsx.py
+#   - Comment lines start with #
+#
+# ─────────────────────────────────────────────
+# EXAMPLE (remove before using as real input):
+# ─────────────────────────────────────────────
+
+[Registration]
+    Registration
+        Email Signup                    XS  FE  R  P1
+        Google Signup                   XS  FE  R  P2
+        Linkedin Signup                 XS  FE  R  P2
+        Invite-Based Registration       XS  FE  R  P3
+
+[Identification]
+    Identification
+        Email Login                     XS  FE  R  P1
+        Linkedin Login                  XS  FE  R  P2
+        Google Login                    XS  FE  R  P2
+        Session Management              XS  FE  R  P2
+
+[First Time Experience]
+    First Time Experience
+        Welcome Flow                    XS  FE  R  P2
+        Role & Profile Setup            XS  FE  R  P1
+        Topic Preferences               XS  FE  R  P1
+        First Action Nudges             XS  FE  R  P2
+
+[Discovery]
+    Discovery
+        Unified Search Bar              XS  FE  R  P1
+        Search Filters                  XS  FE  R  P1
+        AI Semantic Search              S   FE  R  P2
+        Search Suggestions              XS  FE  R  P3
+        Recent Searches                 XS  FE  R  P2
+    Global Search
+        People to Follow                XS  FE  R  P3
+
+[Account Profile]
+    Account Profile
+        Basic Profile, KPIs             XS  FE  R  P1
+    User Profile
+        Professional Experience         XS  FE  R  P3

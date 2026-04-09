@@ -24,7 +24,7 @@ Name the specific challenges that will appear in "What is hard" — derive these
 
 State all assumptions explicitly — any dimension not fully answered where a default will be used.
 
-Present the filled outline to the user in a single message. End with: "Confirm to proceed, or steer any section before I write."
+Write the filled outline to `tech-feasibility-analyses/<codename>/outline.md` immediately — do not print it in chat. Then tell the user the file path and end with: "Review `tech-feasibility-analyses/<codename>/outline.md` — confirm to proceed, or steer any section before I write."
 
 ### Constraints
 
@@ -39,12 +39,11 @@ Present the filled outline to the user in a single message. End with: "Confirm t
 
 | Content | Format | What it contains |
 |---|---|---|
-| Outline (presented in chat) | Filled `templates/outline.md` | Confirmed scope, section list, angles, assumptions |
-| `tech-feasibility-analyses/<codename>/outline.md` | Markdown (doc-narrator) | Written after user confirms the outline |
+| `tech-feasibility-analyses/<codename>/outline.md` | Markdown (doc-narrator) | Written immediately before asking for confirmation; updated in-place if user steers a section |
 
-The `tech-feasibility-analyses/<codename>/outline.md` file follows the intermediate file format: frontmatter with `skill: tech-feasibility`, `codename`, `stage: outline`, `status: complete`; a context seed; prose narrative of what the probing established and what the outline commits to; the confirmed outline in the Output section; and any open scope decisions in Open Questions.
+The file follows the intermediate file format: frontmatter with `skill: tech-feasibility`, `codename`, `stage: outline`, `status: needs-review`; a context seed; prose narrative of what the probing established and what the outline commits to; the confirmed outline in the Output section; and any open scope decisions in Open Questions.
 
-Write this file immediately after the user confirms. Do not write it before confirmation.
+**Never print the outline in chat.** Write the file, state the path, ask for confirmation.
 
 ---
 
@@ -57,4 +56,4 @@ Write this file immediately after the user confirms. Do not write it before conf
 - Named challenges (not "various technical challenges")
 - Named outputs in the Why? table row
 
-**If the user steers a section:** Update the outline in-place in the next response and re-present it. Do not write `tech-feasibility-analyses/<codename>/outline.md` and do not proceed to Stage 3 until the user explicitly confirms the updated outline.
+**If the user steers a section:** Edit `outline.md` in-place. Tell the user what changed and which line. Do not reprint the outline in chat. Do not proceed to Stage 3 until the user explicitly confirms.

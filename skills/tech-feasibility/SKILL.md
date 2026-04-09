@@ -47,8 +47,10 @@ tech-feasibility-analyses/
 ├── <codename>/
 │   ├── .vyasa               ← written when project folder is created
 │   ├── premise.md           ← written after Phase 0
-│   ├── outline.md           ← written after Phase 2
-│   └── analysis.md          ← written after Phase 3
+│   ├── outline.md           ← written before user confirms Phase 2 (for in-file review)
+│   ├── analysis.md          ← written after Phase 3
+│   ├── scope.tree           ← written after Phase 4 (pre-Excel review draft)
+│   └── scope.xlsx           ← generated after user approves scope.tree
 └── completed/
     └── <codename>/          ← whole folder moved here on complete
 ```
@@ -64,7 +66,7 @@ ignore        = ["completed"]
 
 `tech-feasibility-analyses/<codename>/.vyasa`:
 ```toml
-order = ["premise.md", "outline.md", "analysis.md"]
+order = ["premise.md", "outline.md", "analysis.md", "scope.tree"]
 ```
 
 If `tech-feasibility-analyses/.vyasa` already exists, do not overwrite it.
@@ -79,6 +81,7 @@ The latest file in `<codename>/` (by stage order: analysis > outline > premise) 
 | Known `<codename>` alone | Check `tech-feasibility-analyses/<codename>/`. Read latest file's `stage` + `status`. If `needs-review`, surface open questions and stop. If `complete`, resume from next phase. |
 | `list` | Scan `tech-feasibility-analyses/` (exclude `completed/`). Show a 2-column table: **Project** \| **Stage**. One row per pending codename. Pending = not in `completed/`. |
 | `complete <codename>` | Move `tech-feasibility-analyses/<codename>/` → `tech-feasibility-analyses/completed/<codename>/`. Confirm. |
+| `generate excel <codename>` | Read `scope.tree`. Run `scripts/generate-scope-xlsx.py`. Write `scope.xlsx`. Confirm path. |
 
 **Codename generation:** Derive a 2–4 word kebab-case noun phrase from the idea's essence. Tell the user the codename immediately after generating it (e.g. "Codename: `voice-ai-coach`"). Check for collisions across stage folders before writing.
 
@@ -133,13 +136,44 @@ After the user answers: assess which dimensions are still unclear. If any remain
 
 Load: `stages/02-outline/CONTEXT.md` + `templates/outline.md`
 
-Once probing is complete, produce a compact doc plan using the outline template. Present it to the user. Wait for explicit confirmation before proceeding.
+Once probing is complete, produce a compact doc plan using the outline template. Write it to `tech-feasibility-analyses/<codename>/outline.md` immediately — do not print it in chat. Tell the user the file path and wait for explicit confirmation before proceeding.
 
 ### Phase 3 — Write
 
 Load: `stages/03-write/CONTEXT.md` + `references/doc-structure.md` + `references/doc-narrator-rules.md` + `templates/feasibility-doc.md`
 
-Write the full feasibility document. Follow doc-narrator conventions throughout. Write to `analysis/<codename>.md`.
+Write the full feasibility document. Follow doc-narrator conventions throughout. Write to `tech-feasibility-analyses/<codename>/analysis.md`.
+
+After writing, ask: "Want me to draft the scope breakdown for Excel export?"
+
+### Phase 4 — Scope Draft
+
+Load: `stages/04-scope-export/CONTEXT.md` + `templates/scope.tree`
+
+Triggered only when user confirms they want Excel export. Do not auto-run.
+
+Extract from `analysis.md`:
+- Modules (from Architecture + Build Order sections)
+- Features per module
+- Sub-features with estimated complexity, component type, form factor, and phase
+
+Write `tech-feasibility-analyses/<codename>/scope.tree` using the format in `templates/scope.tree`.
+
+Present the file path to the user. **Do not generate the Excel yet.** Wait for explicit approval:
+
+> "Review `scope.tree`, edit if needed, then say `generate excel <codename>` to produce the spreadsheet."
+
+When user says `generate excel <codename>`:
+
+Run:
+```bash
+python .claude/skills/tech-feasibility/scripts/generate-scope-xlsx.py \
+  tech-feasibility-analyses/<codename>/scope.tree \
+  .claude/skills/tech-feasibility/templates/Sample-Scope.xlsx \
+  tech-feasibility-analyses/<codename>/scope.xlsx
+```
+
+Confirm the output path when done.
 
 ---
 
@@ -164,6 +198,8 @@ Write the full feasibility document. Follow doc-narrator conventions throughout.
 | Premise check output template | `templates/premise-check.md` |
 | Pre-write outline template | `templates/outline.md` |
 | Output document skeleton | `templates/feasibility-doc.md` |
+| Scope tree format spec + example | `templates/scope.tree` |
+| Excel generator script | `scripts/generate-scope-xlsx.py` |
 
 ---
 
@@ -180,3 +216,5 @@ Write the full feasibility document. Follow doc-narrator conventions throughout.
 | All assumptions solid in Phase 0 | Write `tech-feasibility-analyses/<codename>/premise.md`. Proceed directly to Phase 1. |
 | Probing complete | Assess completeness → Phase 1 (more questions) or Phase 2 (outline) |
 | Outline confirmed by user | Write `tech-feasibility-analyses/<codename>/outline.md`. Run Phase 3. |
+| Phase 3 complete, user confirms scope export | Run Phase 4. Write `scope.tree`. |
+| `generate excel <codename>` | Run generator script. Write `scope.xlsx`. Confirm. |
