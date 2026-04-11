@@ -159,6 +159,10 @@ def _relative_symlink_target(target: Path, source: Path) -> Path:
     )
 
 
+def _path_exists(path: Path) -> bool:
+    return path.exists() or path.is_symlink()
+
+
 def _install_local_relay(
     llm_path: Path,
     skill_name: str,
@@ -181,6 +185,46 @@ def _install_local_relay(
             target_is_directory=True,
         )
     return relay
+
+
+def _local_relay_matches(
+    llm_path: Path,
+    skill_name: str,
+    source: Path,
+    copy: bool,
+) -> bool:
+    relay = _local_relay_path(llm_path, skill_name)
+    if relay is None:
+        return True
+    if copy:
+        return relay.exists() and not relay.is_symlink()
+    return relay.is_symlink() and relay.resolve() == source.resolve()
+
+
+def _local_relay_needs_repair(
+    llm_path: Path,
+    skill_name: str,
+    source: Path,
+    copy: bool,
+) -> bool:
+    return not _local_relay_matches(llm_path, skill_name, source, copy)
+
+
+def install_kind(llm_path: Path, skill_name: str) -> Literal["symlink", "copy"] | None:
+    target = llm_path / skill_name
+    if not _path_exists(target):
+        return None
+
+    relay = _local_relay_path(llm_path, skill_name)
+    if relay is not None and target.is_symlink():
+        if relay.is_symlink():
+            return "symlink"
+        if relay.exists():
+            return "copy"
+
+    if target.is_symlink():
+        return "symlink"
+    return "copy"
 
 
 def _prune_local_relay(llm_path: Path, skill_name: str) -> None:
@@ -206,7 +250,7 @@ def link_status(llm_path: Path, skillset: str,
     skills = _skills_in(skillset, registry)
     if not skills:
         return "none"
-    installed = sum(1 for s in skills if (llm_path / s.name).exists())
+    installed = sum(1 for s in skills if _path_exists(llm_path / s.name))
     if installed == 0:
         return "none"
     return "full" if installed == len(skills) else "partial"
@@ -247,7 +291,7 @@ def unlink(llm_path: Path, skillset: str, registry: Registry | None = None) -> N
 # ── Individual-skill link ops ─────────────────────────────────────────────────
 
 def skill_is_linked(llm_path: Path, skill_name: str) -> bool:
-    return (llm_path / skill_name).exists()
+    return _path_exists(llm_path / skill_name)
 
 
 def link_skill(llm_path: Path, skillset: str, skill_name: str,
@@ -327,6 +371,12 @@ def sync(cwd: Path, registry: Registry | None = None) -> list[SkillSyncResult]:
             for skill_name in wanted:
                 if skill_name not in available:
                     res.missing_from_set.append(skill_name)
+                    continue
+                skill = (registry[skillset] if registry is not None
+                         else SKILL_SETS_DIR / skillset) / skill_name
+                if _local_relay_needs_repair(llm_path, skill_name, skill, copy=False):
+                    link_skill(llm_path, skillset, skill_name, registry)
+                    res.linked.append(skill_name)
                 elif skill_is_linked(llm_path, skill_name):
                     res.already_linked.append(skill_name)
                 else:

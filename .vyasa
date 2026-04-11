@@ -1,1 +1,1 @@
-ignore = ["skills", "agents"]
+ignore = [".claude", ".agents", ".github", "agents"]

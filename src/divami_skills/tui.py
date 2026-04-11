@@ -141,12 +141,10 @@ class SkillsApp(App):
         return self._llms.get(_base(llm_name))
 
     def _install_kind(self, llm_path: Path, skill_name: str) -> str | None:
-        target = llm_path / skill_name
-        if target.is_symlink():
-            return "symlink"
-        if target.exists():
-            return "copy"
-        return None
+        return manager.install_kind(llm_path, skill_name)
+
+    def _desired_full_status(self) -> str:
+        return "full_copy" if self._use_copy else "full_symlink"
 
     def _skill_cell_status(self, llm_name: str, llm_path: Path, skill_name: str) -> str:
         local_kind = self._install_kind(llm_path, skill_name)
@@ -290,7 +288,7 @@ class SkillsApp(App):
             llm_name = list(self._view_llms().keys())[col_idx - 1]
             llm_path = self._llms[llm_name]
             status = self._skillset_cell_status(llm_name, llm_path, meta.skillset)
-            if status in ("full", "partial"):
+            if status == self._desired_full_status():
                 manager.unlink(llm_path, meta.skillset, self._reg)
                 self._set_status(f"Removed  {meta.skillset}  →  {llm_name}")
             else:
@@ -305,7 +303,8 @@ class SkillsApp(App):
 
             llm_name = list(self._view_llms().keys())[col_idx - 1]
             llm_path = self._llms[llm_name]
-            if manager.skill_is_linked(llm_path, meta.skill):
+            status = self._skill_cell_status(llm_name, llm_path, meta.skill)
+            if status == self._desired_full_status():
                 manager.unlink_skill(llm_path, meta.skill)
                 self._set_status(f"Removed  {meta.skill}  →  {llm_name}")
             else:
