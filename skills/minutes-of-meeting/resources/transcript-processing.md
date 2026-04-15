@@ -89,6 +89,7 @@ The MOM should follow this rubric:
 Recommended structure:
 
 - Title and meeting context
+- `## Participants` section — one line per person: `**ALIAS** — Full Name`. Derive from the alias map at the top of the transcript. This section must appear before Act I so a cold reader knows who SP, YR, etc. are before encountering them in quotes.
 - `## Act I - opening context and setup (~start - ~end)`
 - Additional acts as needed for major discussion phases, pivots, or debates
 - Final act: decisions, tensions, unresolved items, and close
@@ -117,4 +118,4 @@ Naming rules:
 - Single transcript: `<original-name>-mom.md`
 - Multi-file meeting: `YYYYMMDD-mom.md`
 
-Write the MOM into the same folder as the source transcript.
+Output location: write the MOM into the same folder as the source transcript. For transcripts downloaded from a remote source (e.g., Google Docs), that folder is `docs/conversations/` under the current working directory — not a system temp directory. Both the transcript and MOM must end up in the same persistent project folder.

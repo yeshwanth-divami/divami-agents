@@ -32,6 +32,8 @@ Use this skill after a thread has already revealed failure modes. Treat the curr
 - Remove stale or misleading guidance when replacing it.
 - Do not broaden a skill unless the chat proves the broader trigger is needed.
 - If no existing skill is responsible, create a narrow new skill only when the pattern is reusable.
+- **Abstract until project-blind.** A rule passes if it would prevent the same failure in a completely different domain or stack. If the rule mentions a framework, language, or component, raise the abstraction. Keep narrowing until only the principle remains.
+- **Update the skill that governs the failure, not the skill that was active during it.** If the failure was that feedback was too session-specific, that's a retrospect skill failure — patch here, not in the skill being retrospected.
 
 ## Output
 
