@@ -32,6 +32,7 @@ Installing in global mode creates entries in the assistant's user-level skill fo
 install `retrospect-and-update-skill` and `convo-with-me` globally for the LLMs that you use (Better to install it for all the assistants you use, so you have a consistent experience across them). These two skills are the foundation of the preferred collaboration style. 
 
 `retrospect-and-update-skill` is how you update all the skills going forward.
+Because the installed skill folders are softlinks, skill updates usually land by editing the source and opening a pull request, not by copying files around by hand. See [developer.md](developer.md) for that workflow detail.
 
 As an example you were able to set up your name and other preferences that `convo-with-me` relies on to apply the working style rules in every conversation.
 

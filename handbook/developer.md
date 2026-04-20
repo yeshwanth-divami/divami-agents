@@ -31,6 +31,10 @@ That relay is the main invariant worth protecting. Repo-local consumer folders d
 
 If you touch discovery, verify `divami-agents list --cwd /path/to/repo`. If you touch relay logic, verify both `codex-local` and `claude-local` installs against the same repo and confirm the shared relay under `<repo>/agents/`. If you touch the TUI, confirm that the symbols in `tui.py` still match the real manager status behavior instead of only the display legend.
 
+## Updating Skills
+
+Most skill folders in this repo are softlinks, so a skill update usually means editing the source and then opening a pull request. That is the normal path for `retrospect-and-update-skill` work: update the skill content, let the linked folders reflect it, and ship the change through a PR instead of hand-copying changes into every assistant folder.
+
 ## Current Unknowns
 
 1. The repo carries both `skills/` and `agents/`, but only `skills/` is packaged today. If `agents/` is meant to become a runtime source, that contract should move from convention into code.
