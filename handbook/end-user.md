@@ -47,7 +47,7 @@ Nothing new is installed during this step. You are only verifying that the assis
 
 ```bash
 cd /path/to/your/repo
-divami-agents tui --cwd /path/to/your/repo
+divami-agents tui
 ```
 
 Skill-wise implication: repo-local installs write assistant-facing links under that repo, such as `.agents/skills` for Codex or `.claude/skills` for Claude. Under the hood, each local install points first to `<repo>/agents/<skill-name>`, which acts as the shared relay for any local assistant targets in the same repo.
