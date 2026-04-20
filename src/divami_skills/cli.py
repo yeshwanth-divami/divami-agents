@@ -7,9 +7,6 @@ from pathlib import Path
 
 from . import manager
 
-SKILLSET_NAME = "divami-skills"
-UNPACK_DEST = manager.SKILL_SETS_DIR / SKILLSET_NAME
-
 
 # ── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -55,18 +52,12 @@ def _resolve_skills_folder(skills_folder: str | None) -> Path:
     return candidate if candidate.is_dir() else root
 
 
-def _unpack_skillset_name(skills_folder: str | None, skillset_name: str | None) -> str:
+def _unpack_skillset_name(source_root: Path, skills_folder: str | None, skillset_name: str | None) -> str:
     if skillset_name:
         return skillset_name
     if skills_folder:
-        return _resolve_skills_folder(skills_folder).parent.name
-    return SKILLSET_NAME
-
-
-def _skillset_sources(root: Path) -> list[Path]:
-    if (root / "skill.md").is_file() or (root / "SKILL.md").is_file():
-        return [root]
-    return [d for d in root.iterdir() if d.is_dir() and not d.name.startswith(".")]
+        return source_root.parent.name
+    return source_root.parent.name if source_root.name == "skills" else source_root.name
 
 
 def _iter_skill_dirs(path: Path) -> list[Path]:
@@ -199,15 +190,12 @@ def _register_local_skillset(source_dir: Path, skillset_name: str) -> None:
 
 
 def cmd_unpack(args) -> None:
-    skillset_name = _unpack_skillset_name(args.skills_folder, args.skillset_name)
     source_root = _resolve_skills_folder(args.skills_folder)
-    sources = _skillset_sources(source_root)
-    if not sources:
-        print(f"Error: no skill-sets found under {source_root}", file=sys.stderr)
+    skillset_name = _unpack_skillset_name(source_root, args.skills_folder, args.skillset_name)
+    if not source_root.exists():
+        print(f"Error: no skill-set source found under {source_root}", file=sys.stderr)
         sys.exit(1)
-    for source_dir in sources:
-        name = skillset_name if len(sources) == 1 else source_dir.name
-        _register_local_skillset(source_dir, name)
+    _register_local_skillset(source_root, skillset_name)
 
 
 def cmd_link(args) -> None:
@@ -244,7 +232,7 @@ def cmd_list(args) -> None:
     llms = manager.load_all_llms(local_base=cwd)
     skillsets = manager.discover_skill_sets(reg)
     if not skillsets:
-        print(f"No skill-sets found in {manager.SKILL_SETS_DIR}")
+        print(f"No skill sets found in {manager.SKILL_SETS_DIR}")
         return
     col_w = 14
     STATUS_ICON = {"full": "✓", "partial": "~", "none": "·"}
@@ -283,7 +271,7 @@ def cmd_sync(args) -> None:
         total_already += len(r.already_linked)
         total_missing += len(r.missing_from_set)
     print(f"\nSummary: {total_linked} linked, {total_already} already linked, "
-          f"{total_missing} missing from skill-sets")
+          f"{total_missing} missing from skill sets")
 
 
 def cmd_init(args) -> None:
@@ -318,7 +306,7 @@ def main():
     parser = argparse.ArgumentParser(prog="divami-skills")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    p_unpack = sub.add_parser("unpack", help="Register local skill-sets from a cloned repo or explicit skills folder")
+    p_unpack = sub.add_parser("unpack", help="Register a repo's skills/ folder under ~/agents/skillsets")
     p_unpack.add_argument(
         "--skills-folder",
         metavar="DIR",
@@ -332,8 +320,7 @@ def main():
         "--skillset-name",
         metavar="NAME",
         help=(
-            "Name to register under ~/agents/skill-sets when a single skill-set "
-            "directory is registered. Defaults to the source folder name."
+            "Name to register under ~/agents/skillsets. Defaults to the source folder name."
         ),
     )
 
@@ -343,7 +330,7 @@ def main():
     p_web_ui = sub.add_parser("web-ui", help="Experimental FastHTML web UI for skill-set links")
     _add_common(p_web_ui)
 
-    p_list = sub.add_parser("list", help="List skill-sets and their LLM links")
+    p_list = sub.add_parser("list", help="List skill sets and their LLM links")
     _add_common(p_list)
 
     p_link = sub.add_parser("link", help="Link all skills in a skill-set to an LLM")

@@ -11,7 +11,7 @@ flowchart LR
     A["skills/<skill>/...<br/>authoring source"] --> B["scripts/pack.py<br/>build encrypted zip"]
     B --> C["GitHub release<br/>skills.zip asset"]
     C --> D["divami-agents unpack<br/>download + extract"]
-    D --> E["~/agents/skill-sets/<set><br/>registered source"]
+    D --> E["~/agents/skillsets/<repo><br/>symlinked skills source"]
     E --> F["divami-agents link or sync<br/>install selected skills"]
     F --> G["assistant skill folders<br/>global or repo-local"]
 ```
@@ -145,7 +145,7 @@ Cause: decryption failed during unpack.
 
 Fix: verify the key first. If the key is correct, re-download and try again.
 
-### `No skill-sets found in ~/agents/skill-sets`
+### `No skill sets found in ~/agents/skillsets`
 
 Cause: no skill set has been unpacked or registered yet, or discovery depends on an extra root that was not passed.
 

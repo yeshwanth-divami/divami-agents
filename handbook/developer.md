@@ -66,7 +66,7 @@ There is no separate command for single-skill management on the CLI because the 
 
 `manager.build_registry()` merges two sources:
 
-1. Every non-hidden directory under `~/agents/skill-sets`
+1. Every non-hidden directory under `~/agents/skillsets`
 2. Any extra roots passed in by the caller
 
 An extra root can be either a repo root or a `skills/` directory directly. The function first checks `root / "skills"` and falls back to `root` if that subdirectory does not exist. The registry key for an extra root is `root.name`.

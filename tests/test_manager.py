@@ -3,14 +3,17 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from types import SimpleNamespace
 from pathlib import Path
+from unittest import mock
 
+from divami_skills import cli
 from divami_skills import manager
 
 
 class LocalRelayTests(unittest.TestCase):
     def _source_registry(self, root: Path) -> tuple[manager.Registry, Path]:
-        source = root / "home" / "agents" / "skill-sets" / "abc-skillset"
+        source = root / "home" / "agents" / "registry" / "abc-skillset"
         skill = source / "skills-xyz"
         skill.mkdir(parents=True)
         (skill / "SKILL.md").write_text("test skill\n")
@@ -64,6 +67,47 @@ class LocalRelayTests(unittest.TestCase):
             self.assertTrue(relay.is_symlink())
             self.assertEqual(relay.resolve(), source_skill.resolve())
             self.assertEqual(results[0].linked, ["skills-xyz"])
+
+
+class UnpackTests(unittest.TestCase):
+    def test_unpack_registers_repo_skills_folder(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = root / "divami-agents"
+            skills = repo / "skills"
+            skills.mkdir(parents=True)
+            (skills / "demo").mkdir()
+            target_root = root / "home" / "agents" / "skillsets"
+            with mock.patch.object(manager, "SKILL_SETS_DIR", target_root):
+                cli.cmd_unpack(SimpleNamespace(skills_folder=str(repo), skillset_name=None))
+            target = target_root / "divami-agents"
+            self.assertTrue(target.is_symlink())
+            self.assertEqual(target.resolve(), skills.resolve())
+
+    def test_unpack_defaults_to_current_repo_name(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = root / "divami-agents"
+            skills = repo / "skills"
+            skills.mkdir(parents=True)
+            (skills / "demo").mkdir()
+            target_root = root / "home" / "agents" / "skillsets"
+            with mock.patch.object(manager, "SKILL_SETS_DIR", target_root), \
+                 mock.patch.object(cli.Path, "cwd", return_value=repo):
+                cli.cmd_unpack(SimpleNamespace(skills_folder=None, skillset_name=None))
+            target = target_root / "divami-agents"
+            self.assertTrue(target.is_symlink())
+            self.assertEqual(target.resolve(), skills.resolve())
+
+    def test_discover_ignores_legacy_skillsets_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            modern = root / "home" / "agents" / "skillsets"
+            other = root / "home" / "agents" / "other-root"
+            (modern / "modern-set").mkdir(parents=True)
+            (other / "ignored-set").mkdir(parents=True)
+            with mock.patch.object(manager, "SKILL_SETS_DIR", modern):
+                self.assertEqual(manager.discover_skill_sets(), ["modern-set"])
 
 
 if __name__ == "__main__":

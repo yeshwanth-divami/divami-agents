@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-SKILL_SETS_DIR = Path.home() / "agents" / "skill-sets"
+SKILL_SETS_DIR = Path.home() / "agents" / "skillsets"
 CONFIG_PATH = Path.home() / ".config" / "divami-skills" / "llms.json"
 RC_FILENAME = ".divami-skills.toml"
 
@@ -34,14 +34,14 @@ LinkStatus = Literal["full", "partial", "none"]
 
 # ── Registry ──────────────────────────────────────────────────────────────────
 # Maps skillset_name -> the directory that directly contains individual skill dirs.
-# Standard:  "divami-skills" -> ~/agents/skill-sets/divami-skills/
+# Standard:  "divami-skills" -> ~/agents/skillsets/divami-skills/
 # Extra root "/repo":      "repo"       -> /repo/skills/   (or /repo/ if no skills/ subdir)
 
 Registry = dict[str, Path]
 
 
 def build_registry(extra_roots: list[Path] | None = None) -> Registry:
-    """Build the full skill-set registry from SKILL_SETS_DIR + any extra roots."""
+    """Build the full skill-set registry from the configured root plus extras."""
     reg: Registry = {}
 
     if SKILL_SETS_DIR.exists():
@@ -113,8 +113,10 @@ def discover_skill_sets(registry: Registry | None = None) -> list[str]:
         return sorted(registry.keys())
     if not SKILL_SETS_DIR.exists():
         return []
-    return sorted(d.name for d in SKILL_SETS_DIR.iterdir()
-                  if d.is_dir() and not d.name.startswith("."))
+    return sorted(
+        d.name for d in SKILL_SETS_DIR.iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+    )
 
 
 def _skills_in(skillset: str, registry: Registry | None = None) -> list[Path]:

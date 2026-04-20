@@ -9,7 +9,7 @@ As the config owner, you are responsible for four contracts:
 | Contract | Where it lives | Why it exists |
 |---|---|---|
 | Global assistant paths | `~/.config/divami-skills/llms.json` | Overrides the built-in<br/>destination folders for each<br/>assistant. |
-| Registered skill sets | `~/agents/skill-sets/` | Holds named sources that<br/>the CLI can discover and link. |
+| Registered skill sets | `~/agents/skillsets/` | Holds named sources that<br/>the CLI can discover and link. |
 | Repo-local selection | `<repo>/.divami-skills.toml` | Declares which exact skills<br/>belong in a specific repo. |
 | Archive password | `DIVAMI_AGENTS_PASSWORD` | Decrypts the packaged<br/>`skills.zip` download. |
 
@@ -66,14 +66,14 @@ If the file does not exist, the defaults in code are used. If the file exists bu
 
 ## Registering Skill Sets Safely
 
-The CLI discovers skill sets from `~/agents/skill-sets` plus any roots passed with `--roots`. A registered skill set is simply a directory that contains one subdirectory per skill. The directory name becomes the skill-set name.
+The CLI discovers skill sets from `~/agents/skillsets` plus any roots passed with `--roots`. A registered skill set is simply a directory that contains one subdirectory per skill. The directory name becomes the skill-set name.
 
-There are two ways to populate `~/agents/skill-sets`:
+There are two ways to populate `~/agents/skillsets`:
 
 1. Download and unpack the packaged release with `divami-skills unpack`
 2. Register a local `skills/` directory with `divami-skills unpack --skills-folder ...`
 
-For local registration, the command creates a symlink at `~/agents/skill-sets/<skillset-name>` pointing at the source folder. It refuses to overwrite a non-symlink target. That is a deliberate safety check because a real directory at that location may contain manually managed content.
+For local registration, the command creates a symlink at `~/agents/skillsets/<repo-name>` pointing at the repo's `skills/` folder. It refuses to overwrite a non-symlink target. That is a deliberate safety check because a real directory at that location may contain manually managed content.
 
 ## Owning `.divami-skills.toml`
 
@@ -112,7 +112,7 @@ Fix: add the missing key or remove the override file to fall back to built-in de
 
 ### `unpack --skills-folder` refuses to register a skill set
 
-Most likely cause: the destination under `~/agents/skill-sets/<name>` already exists as a real directory or points somewhere else.
+Most likely cause: the destination under `~/agents/skillsets/<repo-name>` already exists as a real directory or points somewhere else.
 
 Fix: inspect the target manually. Remove or rename it only if you are certain it is stale. The CLI exits rather than replacing it blindly.
 

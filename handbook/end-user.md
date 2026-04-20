@@ -50,7 +50,7 @@ The TUI opens a matrix. Each row is a skill set or an individual skill within a 
 
 Press `t` to toggle between global and repo-local views.
 
-During `unpack`, skill sets are registered under `~/agents/skill-sets/<skill-set-name>` by default.
+During `unpack`, skill sets are registered under `~/agents/skillsets/<repo-name>` by default, as a symlink to that repo's `skills/` folder.
 
 Skill sets are shown collapsed by default. Press `Enter` or `Space` on a skill-set row to expand it and see individual skills.
 
