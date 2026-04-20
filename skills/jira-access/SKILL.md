@@ -1,4 +1,3 @@
-````skill
 ---
 name: jira-access
 description: Query and summarize live Jira data for the DEB project, including ticket lookups, backlog and sprint views, assignee filters, blocked work, and reusable JQL patterns.
@@ -261,4 +260,3 @@ issues = client.search_issues(
     maxResults=100,
 )
 ```
-````
