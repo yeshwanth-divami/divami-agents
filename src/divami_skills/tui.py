@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from rich.align import Align
+from rich.console import RenderableType
 from rich.style import Style
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import DataTable, Footer, Header, Label
 
 from . import manager
@@ -16,14 +18,14 @@ from . import manager
 # ── Color palette — muted, professional ──────────────────────────────────────
 # Each LLM: (display_name, top_bg, global_bg, local_bg, global_icon, local_icon)
 _P = {
-    "claude":  ("Claude",         "#2c4f82", "#1d3660", "#0f2240", "#6fa0d8", "#456ea0"),
-    "codex":   ("Codex",          "#276044", "#1a4430", "#0e2c1e", "#60a07a", "#3d7055"),
-    "gemini":  ("Gemini",         "#725e28", "#4e4018", "#322808", "#b89848", "#846e30"),
-    "copilot": ("Github Copilot", "#553278", "#391f54", "#221235", "#9068b8", "#624585"),
+    "claude":  ("Claude",         "#3c6aa8", "#284a78", "#163150", "#8bb7ef", "#5f8bc0"),
+    "codex":   ("Codex",          "#33805a", "#215438", "#123523", "#82c49b", "#559d74"),
+    "gemini":  ("Gemini",         "#9a7d35", "#6c5620", "#47390f", "#e0bf6e", "#aa8a4a"),
+    "copilot": ("Github Copilot", "#71439f", "#4a2c6b", "#2b1840", "#b48cdc", "#7f5aa9"),
 }
 
 _WHITE = "white"
-_DIM   = "#888888"
+_DIM   = "#c0c0c0"
 
 RowType = Literal["header", "skillset", "skill"]
 
@@ -49,29 +51,29 @@ def _top_cell(llm_name: str) -> Text:
     if not manager.is_local(llm_name):
         return Text(f" {name} ", style=Style(bgcolor=top_bg, color=_WHITE, bold=True))
     else:
-        return Text(f" {name} ", style=Style(bgcolor=l_bg, color=_DIM))
+        return Text(f" {name} ", style=Style(bgcolor=l_bg, color="#e0e0e0", bold=True))
 
 
 def _sub_cell(llm_name: str) -> Text:
     """Second header row — Global / Local label."""
     _, _, g_bg, l_bg, *_ = _palette(llm_name)
     if not manager.is_local(llm_name):
-        return Text(" Global ", style=Style(bgcolor=g_bg, color=_WHITE))
+        return Text(" Global ", style=Style(bgcolor=g_bg, color=_WHITE, bold=True))
     else:
-        return Text(" Local  ", style=Style(bgcolor=l_bg, color=_DIM))
+        return Text(" Local  ", style=Style(bgcolor=l_bg, color="#e0e0e0", bold=True))
 
 
-def _icon_cell(status: str, llm_name: str) -> Text:
+def _icon_cell(status: str, llm_name: str) -> RenderableType:
     _, _, _, _, g_icon, l_icon = _palette(llm_name)
-    color = l_icon if manager.is_local(llm_name) else g_icon
+    color = g_icon
     if status == "full_symlink":
-        return Text(" ✓  ", style=Style(color=color, bold=True))
+        return Align.center(Text("●", style=Style(color=color, bold=True), justify="center"))
     elif status == "global_symlink":
-        return Text(" o  ", style=Style(color=color))
+        return Align.center(Text("◎", style=Style(color=color), justify="center"))
     elif status == "partial":
-        return Text("  ~  ", style=Style(color=color))
+        return Align.center(Text("○", style=Style(color=color), justify="center"))
     else:
-        return Text("  ·  ", style=Style(color=_DIM))
+        return Align.center(Text("·", style=Style(color="#d0d0d0"), justify="center"))
 
 
 class SkillsApp(App):
@@ -79,15 +81,20 @@ class SkillsApp(App):
     #help_primary, #help_secondary {
         height: 1;
         padding: 0 1;
-        color: $text-muted;
+        color: #e0e0e0;
     }
     #status {
         height: 1;
         padding: 0 1;
-        color: $text-muted;
+        color: #f0f0f0;
     }
     DataTable {
         height: 1fr;
+        color: #f2f2f2;
+    }
+    #legend {
+        width: 52;
+        margin-left: 1;
     }
     """
 
@@ -116,7 +123,9 @@ class SkillsApp(App):
         with Vertical():
             yield Label("", id="help_primary")
             yield Label("", id="help_secondary")
-            yield DataTable(id="matrix", show_header=False)
+            with Horizontal():
+                yield DataTable(id="matrix", show_header=False)
+                yield DataTable(id="legend", show_header=True)
             yield Label("", id="status")
         yield Footer()
 
@@ -174,19 +183,23 @@ class SkillsApp(App):
         self.query_one("#help_primary", Label).update(
             "Name: ENTER=expand  ·  LLM: ENTER=install/remove"
         )
-        self.query_one("#help_secondary", Label).update(
-            "T=Global/Local  ·  R=refresh  ·  Q=quit"
-        )
+        self.query_one("#help_secondary", Label).update("T=Global/Local  ·  R=refresh  ·  Q=quit")
 
         table = self.query_one("#matrix", DataTable)
+        legend = self.query_one("#legend", DataTable)
         table.clear(columns=True)
         table.cursor_type = "cell"
         table.zebra_stripes = True
+        legend.clear(columns=True)
+        legend.cursor_type = "none"
+        legend.zebra_stripes = True
 
         # Hidden column labels (still needed for structure/keys)
         table.add_column("", key="__name__")
         for llm_name in view:
             table.add_column("", key=llm_name)
+        legend.add_column("Symbol", key="symbol", width=10)
+        legend.add_column("Meaning", key="meaning", width=39)
 
         self._rows = []
 
@@ -196,6 +209,14 @@ class SkillsApp(App):
             top_row.append(_top_cell(llm_name))
         table.add_row(*top_row, key="__top__")
         self._rows.append(RowMeta(kind="header"))
+        legend.add_row("Controls", "T = switch local/global view", height=None)
+        legend.add_row("", "R = rebuild the matrix from disk", height=None)
+        legend.add_row("", "Q = quit the TUI", height=None)
+        legend.add_row("", "", height=None)
+        legend.add_row("●", "Installed locally in this repo for this LLM", height=None)
+        legend.add_row("◎", "Installed only in the global location for this LLM", height=None)
+        legend.add_row("○", "Partially installed from this skill-set for this LLM", height=None)
+        legend.add_row("·", "Not installed in this repo for this LLM", height=None)
 
         # ── Row 1: Global / Local labels ──────────────────────────────────
         sub_row: list[str | Text] = [Text("Skill / Set", style="bold dim")]

@@ -339,6 +339,11 @@ def cmd_tui(args) -> None:
     SkillsApp(cwd=cwd, registry=reg).run()
 
 
+def cmd_web_ui(args) -> None:
+    from .web_ui import main
+    main()
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main():
@@ -367,6 +372,9 @@ def main():
 
     p_tui = sub.add_parser("tui", help="Interactive TUI to manage skill-set links")
     _add_common(p_tui)
+
+    p_web_ui = sub.add_parser("web-ui", help="Experimental FastHTML web UI for skill-set links")
+    _add_common(p_web_ui)
 
     p_list = sub.add_parser("list", help="List skill-sets and their LLM links")
     _add_common(p_list)
@@ -398,6 +406,7 @@ def main():
         "sync":   cmd_sync,
         "init":   cmd_init,
         "tui":    cmd_tui,
+        "web-ui": cmd_web_ui,
     }
 
     if args.command in dispatch:
