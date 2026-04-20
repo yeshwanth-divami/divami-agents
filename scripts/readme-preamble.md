@@ -12,3 +12,5 @@ Choose the handbook that matches the job in front of you:
 One repo detail matters before you go deeper: the runtime installs from skill sets on disk, and this repository's packaged source of truth is the top-level [`skills/`](skills) directory. The parallel [`agents/`](agents) tree exists in the repo, but the current packaging and install path described in the handbooks runs through `skills/`, `scripts/pack.py`, and `src/divami_skills/`.
 
 Following are the skills currently included in the repo and their purposes.
+
+Once [installed](handbook/end-user#what-the-tui-shows) into the assistant of your choice, the skills can be invoked by their name using `/skill-name` although usually, the assistant will automatically pick the right skill based on the context of the conversation. The skills are:

@@ -13,6 +13,8 @@ One repo detail matters before you go deeper: the runtime installs from skill se
 
 Following are the skills currently included in the repo and their purposes.
 
+Once [installed](handbook/end-user#what-the-tui-shows) into the assistant of your choice, the skills can be invoked by their name using `/skill-name` although usually, the assistant will automatically pick the right skill based on the context of the conversation. The skills are:
+
 | Skill | Description |
 | --- | --- |
 | [cleanup-and-refactor](skills/cleanup-and-refactor/SKILL.md) | Clean up already-working feature code after exploratory implementation by removing dead paths, tightening local structure, running one focused verification pass, and reporting what is safe to commit. |
