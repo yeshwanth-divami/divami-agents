@@ -26,7 +26,7 @@ The project has four important abstractions in code:
 | skill set | directory containing skill dirs | filesystem | Gives the CLI one<br/>named unit to discover<br/>and install. |
 | registry | `dict[str, Path]` | `manager.build_registry` | Maps a skill-set name<br/>to the directory that<br/>contains its skills. |
 | assistant target | `dict[str, Path]` entry | `manager.load_all_llms` | Maps a target name such<br/>as `codex-local` to the<br/>destination folder to write. |
-| RC file | `.divami-skills.toml` | repo root | Declares a repo-local subset<br/>of skills to sync. |
+| RC file | `.divami-agents.toml` | repo root | Declares a repo-local subset<br/>of skills to sync. |
 
 The CLI stays thin by design. It parses arguments, resolves the working directory, builds a registry, and then hands the actual work to `manager.py`.
 
@@ -112,7 +112,7 @@ Rules:
 
 | Rule | Effect |
 |---|---|
-| Missing `.divami-skills.toml` | `sync` exits with a clear error. |
+| Missing `.divami-agents.toml` | `sync` exits with a clear error. |
 | Empty RC structure | `sync` returns no work. |
 | Unknown assistant table | ignored if the target name is not resolvable |
 | Unknown skill name | reported in `missing_from_set` |
@@ -146,7 +146,7 @@ The release story is:
 1. Author or update skills in `skills/`
 2. Build `skills.zip` with `scripts/pack.py`
 3. Publish the Python package and GitHub release asset through the Makefile
-4. Let end users fetch the latest release asset through `divami-skills unpack`
+4. Let end users fetch the latest release asset through `divami-agents unpack`
 
 If you add new runtime content that must ship to end users, placing it only under `agents/` will not be enough. The pack script will miss it.
 

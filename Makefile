@@ -3,7 +3,7 @@ REPO     = yeshwanth-divami/divami-skills-dist
 THIS_REPO = yeshwanth-divami/divami-agents
 TEAM_FILE = divami-team.csv
 
-.PHONY: venv pack publish add-collabs
+.PHONY: venv pack publish add-collabs setup-tui
 
 # Usage: make add-collabs [TEAM_FILE=other.txt] [THIS_REPO=owner/repo]
 add-collabs:
@@ -29,11 +29,10 @@ add-collabs:
 
 venv:
 	uv venv .venv --clear
-	uv pip install --python .venv pyzipper textual build twine tomli
+	uv pip install --python .venv textual build twine tomli
 
 pack:
-	DIVAMI_AGENTS_PASSWORD=$${DIVAMI_AGENTS_PASSWORD:?DIVAMI_AGENTS_PASSWORD is required} \
-		.venv/bin/python scripts/pack.py
+	.venv/bin/python scripts/pack.py
 
 # Usage: make publish [BUMP=minor]
 publish: pack
@@ -45,3 +44,10 @@ publish: pack
 	gh release create "v$$VERSION" --title "v$$VERSION" --notes "" \
 		--repo $(REPO) \
 		"src/divami_skills/skills.zip#skills.zip"
+
+# Bootstrap this repo with uv, install divami-agents globally, unpack the skill pack, and open the TUI.
+setup-tui:
+	brew list uv >/dev/null 2>&1 || brew install uv
+	uv tool install --reinstall .
+	divami-agents unpack
+	divami-agents tui

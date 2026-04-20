@@ -5,7 +5,6 @@ import shutil
 import sys
 from pathlib import Path
 
-import pyzipper
 from . import manager
 
 SKILLSET_NAME = "divami-skills"
@@ -48,16 +47,12 @@ def _registry(args) -> manager.Registry:
 
 # ── Commands ──────────────────────────────────────────────────────────────────
 
-GITHUB_REPO = "yeshwanth-divami/divami-skills-dist"
-
-
 def _resolve_skills_folder(skills_folder: str | None) -> Path:
-    if skills_folder:
-        root = Path(skills_folder).expanduser().resolve()
-        if root.name == "skills":
-            return root
-        return root / "skills"
-    return UNPACK_DEST
+    root = Path(skills_folder).expanduser().resolve() if skills_folder else Path.cwd().resolve()
+    if root.name == "skills":
+        return root
+    candidate = root / "skills"
+    return candidate if candidate.is_dir() else root
 
 
 def _unpack_skillset_name(skills_folder: str | None, skillset_name: str | None) -> str:
@@ -68,9 +63,10 @@ def _unpack_skillset_name(skills_folder: str | None, skillset_name: str | None) 
     return SKILLSET_NAME
 
 
-def _extract_zip(tmp_path: Path, dest: Path, password: str) -> None:
-    with pyzipper.AESZipFile(tmp_path) as zf:
-        zf.extractall(path=dest, pwd=password.encode())
+def _skillset_sources(root: Path) -> list[Path]:
+    if (root / "skill.md").is_file() or (root / "SKILL.md").is_file():
+        return [root]
+    return [d for d in root.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
 
 def _iter_skill_dirs(path: Path) -> list[Path]:
@@ -203,43 +199,15 @@ def _register_local_skillset(source_dir: Path, skillset_name: str) -> None:
 
 
 def cmd_unpack(args) -> None:
-    import tempfile
-    import urllib.request
-
     skillset_name = _unpack_skillset_name(args.skills_folder, args.skillset_name)
-    if args.skills_folder:
-        source_dir = _resolve_skills_folder(args.skills_folder)
-        _register_local_skillset(source_dir, skillset_name)
-        return
-
-    url = f"https://github.com/{GITHUB_REPO}/releases/latest/download/skills.zip"
-    dest = UNPACK_DEST
-    password = os.environ.get("DIVAMI_AGENTS_PASSWORD")
-    if not password:
-        print("Error: DIVAMI_AGENTS_PASSWORD is required.", file=sys.stderr)
+    source_root = _resolve_skills_folder(args.skills_folder)
+    sources = _skillset_sources(source_root)
+    if not sources:
+        print(f"Error: no skill-sets found under {source_root}", file=sys.stderr)
         sys.exit(1)
-    print("Downloading built-in skills from latest GitHub release ...")
-    try:
-        with urllib.request.urlopen(url) as resp, tempfile.NamedTemporaryFile(
-            suffix=".zip", delete=False
-        ) as tmp:
-            tmp.write(resp.read())
-            tmp_path = Path(tmp.name)
-    except Exception as e:
-        print(f"Error: download failed: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    try:
-        with tempfile.TemporaryDirectory() as extract_dir:
-            staged = Path(extract_dir)
-            _extract_zip(tmp_path, staged, password)
-            _merge_unpacked_skills(staged, dest)
-        print(f"Skills unpacked to {dest}")
-    except (RuntimeError, pyzipper.BadZipFile):
-        print("Error: wrong DIVAMI_AGENTS_PASSWORD or corrupt zip.", file=sys.stderr)
-        sys.exit(1)
-    finally:
-        tmp_path.unlink(missing_ok=True)
+    for source_dir in sources:
+        name = skillset_name if len(sources) == 1 else source_dir.name
+        _register_local_skillset(source_dir, name)
 
 
 def cmd_link(args) -> None:
@@ -350,23 +318,22 @@ def main():
     parser = argparse.ArgumentParser(prog="divami-skills")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    p_unpack = sub.add_parser("unpack", help=f"Unpack built-in skills to {UNPACK_DEST}. Run this command first, before running tui command")
+    p_unpack = sub.add_parser("unpack", help="Register local skill-sets from a cloned repo or explicit skills folder")
     p_unpack.add_argument(
         "--skills-folder",
         metavar="DIR",
         help=(
-            "Use a local skill-set source instead of downloading from GitHub. "
-            "If the path is a repo root, the command uses <path>/skills; if "
-            "the path already ends with skills, it uses that directory directly."
+            "Use a local skill-set source. If the path is a repo root, the "
+            "command uses <path>/skills; if the path already ends with skills, "
+            "it uses that directory directly."
         ),
     )
     p_unpack.add_argument(
         "--skillset-name",
         metavar="NAME",
         help=(
-            "Name to register under ~/agents/skill-sets when --skills-folder "
-            "is set. Defaults to the parent folder name of the resolved skills "
-            "directory."
+            "Name to register under ~/agents/skill-sets when a single skill-set "
+            "directory is registered. Defaults to the source folder name."
         ),
     )
 
