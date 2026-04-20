@@ -1,6 +1,6 @@
 # Divami Agents
 
-Divami Agents is a Python package and skill workspace for installing reusable agent skills into the folders that Claude, Codex, Gemini, and Copilot already watch. The repo carries three things together: the shipping CLI and TUI under `src/divami_skills/`, the source skill library under `skills/`, and supporting docs for the people who use, operate, and extend the tool. If you are opening this repo cold, the important model is simple: skill sets are discovered from disk, then linked into assistant-specific global or repo-local folders. By the end of this README, you should know which handbook to open next and where the shipped skills live.
+Divami Agents is a [Python package](https://github.com/yeshwanth-divami/divami-agents) and skill workspace for installing reusable agent skills into the folders that Claude, Codex, Gemini, and Copilot already watch. The repo carries three things together: the shipping CLI and TUI under `src/divami_skills/`, the source skill library under `skills/`, and supporting docs for the people who use, operate, and extend the tool. If you are opening this repo cold, the important model is simple: skill sets are discovered from disk, then linked into assistant-specific global or repo-local folders. By the end of this README, you should know which handbook to open next and where the shipped skills live.
 
 Choose the handbook that matches the job in front of you:
 
