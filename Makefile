@@ -50,4 +50,16 @@ setup-tui:
 	brew list uv >/dev/null 2>&1 || brew install uv
 	uv tool install --reinstall .
 	divami-agents unpack
+	mkdir -p "$$HOME/.codex" "$$HOME/.claude" "$$HOME/.copilot" "$$HOME/.gemini"
+	for target in \
+		"$$HOME/.codex/AGENTS.md" \
+		"$$HOME/.claude/CLAUDE.md" \
+		"$$HOME/.copilot/copilot-instructions.md" \
+		"$$HOME/.gemini/gemini.md"; do \
+		if [ ! -f "$$target" ]; then \
+			cp skills/startup.md "$$target"; \
+		elif ! grep -Fqx '## Session Initialization (MANDATORY)' "$$target"; then \
+			printf '\n%s\n' "$$(cat skills/startup.md)" >> "$$target"; \
+		fi; \
+	done
 	divami-agents tui

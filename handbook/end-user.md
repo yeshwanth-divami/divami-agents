@@ -37,7 +37,7 @@ Because the installed skill folders are softlinks, skill updates usually land by
 As an example you were able to set up your name and other preferences that `convo-with-me` relies on to apply the working style rules in every conversation.
 
 ### Test in a new conversation
-Start a new conversation and the assistant should automatically ask you to set up your name with `retrospect-and-update-skill` if you haven't already, and then apply the `convo-with-me` rules for the rest of the conversation. 
+Start a new conversation by saying "Hi load /convo-with-me skill" and the assistant should automatically ask you to set up your name with `retrospect-and-update-skill` if you haven't already, and then apply the `convo-with-me` rules for the rest of the conversation. 
 
 Nothing new is installed during this step. You are only verifying that the assistant can now see the globally linked skills and trigger their instructions in a fresh session. Also, because you have updated `convo-with-me` with your name, the assistant should greet you by that name in the first message on every subsequent conversation.
 
