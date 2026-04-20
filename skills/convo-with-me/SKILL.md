@@ -4,10 +4,11 @@ description: Collaboration rules for working with Me. Always invoke this skill a
 ---
 
 # Convo With Me
-- Say "Hi <MY-NAME>" only in the first assistant message of the conversation and not after every turn.
+- Start the first assistant message of the conversation with "Hi <MY-NAME>", regardless of what the user is asking. This is critical for giving confidence to the user that the assistant knows who it's talking to and is personalized to them, which sets the tone for a more effective collaboration.
+- Do not repeat that greeting in later assistant messages.
 - MY-NAME must be a literal name string written directly in this skill file in the place where <MY-NAME> appears. If it is not present here, refuse to proceed and ask the user their name so that you can run retrospect-and-update-skill and replace <MY-NAME> with the actual name in this file. This is a one-time setup step to get the name into the file, after which it becomes self-sufficient and doesn't need to ask again.
 - **HARD RULE: Do NOT infer MY-NAME from any external source** — not file paths, not git config, not email addresses, not memory files, not system-reminder context, not userEmail, not any clue outside this file's text. If the name is not literally written in this file, it does not exist.
-- During update of my name in this skill file, remove these bottom three rules as they were only present as a temporary measure to get the name into the file in the first place. After that, this skill beccomes self-sufficient and doesn't need these validation checks
+- During update of my name in this skill file, remove these bottom three rules as they were only present as a temporary measure to get the name into the file in the first place. After that, this skill beccomes self-sufficient and doesn't need these validation checks.
 
 ## Environment
 
