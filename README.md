@@ -11,29 +11,33 @@ Choose the handbook that matches the job in front of you:
 
 One repo detail matters before you go deeper: the runtime installs from skill sets on disk, and this repository's packaged source of truth is the top-level [`skills/`](skills) directory. The parallel [`agents/`](agents) tree exists in the repo, but the current packaging and install path described in the handbooks runs through `skills/`, `scripts/pack.py`, and `src/divami_skills/`.
 
+Following are the skills currently included in the repo and their purposes.
+
 | Skill | Description |
 | --- | --- |
-| [cleanup-and-refactor](skills/cleanup-and-refactor/SKILL.md) | Cleans up working feature code after iterative chat-driven development. Use when code now works but contains dead paths, duplicate logic, or refactor debt from back-and-forth implementation. Produces a narrowed cleanup plan, one verification pass, and a commit-ready summary. |
-| [code-refactoring](skills/code-refactoring/SKILL.md) | Use when the user wants to refactor an existing codebase without rewriting large amounts of already-solved logic. Invoke when reducing slop, extracting shared modules, deduplicating behavior, tightening boundaries, reusing existing code patterns, or turning copy-paste candidates into canonical services. |
-| [code-review](skills/code-review/SKILL.md) | Run a comprehensive code review |
-| [daksh](skills/daksh/SKILL.md) | Structured product development lifecycle workflow using numbered AI chat modes. Use when building a new product or feature from scratch, onboarding a new client project, writing vision/business/roadmap documents, defining module PRDs and TRDs, breaking work into dev tasks, or implementing tasks with Git workflow. Invoke for any phase client onboarding → vision → business requirements → roadmap → module PRD → module TRD → module tasks → implementation. |
-| [doc-narrator](skills/doc-narrator/SKILL.md) | Narrative writing skill for technical documentation. Writes context seeds, prose-first sections, open questions, inline links, and 'Why?' tables for any technical document. Output targets Vyasa. Use standalone when writing or reviewing any technical doc, or invoked by grove as its writing layer. |
-| [find-skills](skills/find-skills/SKILL.md) | Helps users discover and install agent skills when they ask questions like "how do I do X", "find a skill for X", "is there a skill that can...", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill. |
-| [gws-chat](skills/gws-chat/SKILL.md) | Google Chat: Manage Chat spaces and messages. |
-| [gws-chat-send](skills/gws-chat-send/SKILL.md) | Google Chat: Send a message to a space. |
-| [gws-classroom](skills/gws-classroom/SKILL.md) | Google Classroom: Manage classes, rosters, and coursework. |
-| [gws-docs](skills/gws-docs/SKILL.md) | Read and write Google Docs. |
-| [gws-docs-write](skills/gws-docs-write/SKILL.md) | Google Docs: Append text to a document. |
-| [gws-gmail](skills/gws-gmail/SKILL.md) | Gmail: Send, read, and manage email. |
-| [gws-gmail-read](skills/gws-gmail-read/SKILL.md) | Gmail: Read a message and extract its body or headers. |
-| [gws-gmail-triage](skills/gws-gmail-triage/SKILL.md) | Gmail: Show unread inbox summary (sender, subject, date). |
-| [gws-gmail-watch](skills/gws-gmail-watch/SKILL.md) | Gmail: Watch for new emails and stream them as NDJSON. |
-| [gws-meet](skills/gws-meet/SKILL.md) | Manage Google Meet conferences. |
-| [gws-shared](skills/gws-shared/SKILL.md) | gws CLI: Shared patterns for authentication, global flags, and output formatting. |
-| [icm-skill-creator](skills/icm-skill-creator/SKILL.md) | Creates new Claude Code skills that strictly follow the Interpretable Context Methodology (ICM) — filesystem-based, progressively discloseable, staged workflows. Interviews the user (up to 5 questions), then scaffolds a complete ICM-compliant skill directory. Use when creating any new skill or restructuring an existing one to be ICM-compliant. |
-| [jira-access](skills/jira-access/SKILL.md) |  |
-| [lit-parse](skills/lit-parse/SKILL.md) | Convert documents (DOCX, PDF, XLSX, PPTX, images) to text/markdown files using the `lit` CLI tool. Use when the user wants to batch-convert or individually parse documents into readable text or markdown format. |
-| [minutes-of-meeting](skills/minutes-of-meeting/SKILL.md) | Use when the user wants to process one or more meeting transcript files into minutes of meeting (MOM). Invoke when the user asks to summarize a meeting, create MOM notes, capture action items, write up a standup or sprint planning session, or document decisions from any conversation transcript. |
-| [retrospect-and-update-skill](skills/retrospect-and-update-skill/SKILL.md) | Analyze the current chat after retries, false starts, or repeated corrections. Use when Codex needs to identify which false assumptions caused wasted work, extract the correct execution patterns discovered later in the thread, and update the implicated skill files so future runs start with the corrected workflow. |
-| [tech-feasibility](skills/tech-feasibility/SKILL.md) | Given a tech idea (1–3 sentences), probes scope through iterative Q&A batches, presents a doc outline for confirmation, then writes a feasibility analysis following doc-narrator conventions. Invoke when the user describes a tech idea and wants to understand how to build it. |
-| [use-cases](skills/use-cases/SKILL.md) | Excavate a use case from a finished project's artifacts (code, docs, transcripts) and produce a publishable narrative through gated stages. Invoke from within a project repo. |
+| [cleanup-and-refactor](skills/cleanup-and-refactor/SKILL.md) | Clean up already-working feature code after exploratory implementation by removing dead paths, tightening local structure, running one focused verification pass, and reporting what is safe to commit. |
+| [code-refactoring](skills/code-refactoring/SKILL.md) | Refactor code by finding the canonical existing implementation, choosing the smallest safe seam, and extracting or redirecting behavior instead of rewriting solved logic from scratch. |
+| [code-review](skills/code-review/SKILL.md) | Perform a severity-rated code review across security, correctness, performance, and maintainability, with concrete file-level findings and optional cross-validation for high-risk changes. |
+| [convo-with-me](skills/convo-with-me/SKILL.md) | Collaboration rules for working with Me. Always invoke this skill at the start of every conversation with me to apply my preferred working style. |
+| [daksh](skills/daksh/SKILL.md) | Run the Daksh product-delivery pipeline through explicit stage and command contexts, from onboarding and strategy docs through implementation, approvals, Jira sync, and handbook updates. |
+| [divami-system-design](skills/divami-system-design/SKILL.md) |  |
+| [doc-narrator](skills/doc-narrator/SKILL.md) | Write or review technical docs for cold readers by seeding context first, leading with prose before diagrams, surfacing open questions, and formatting the result for Vyasa. |
+| [find-skills](skills/find-skills/SKILL.md) | Find relevant third-party skills, vet them for quality, and present or install the best-fit options when a user needs a capability that may already exist in the skills ecosystem. |
+| [gws-chat](skills/gws-chat/SKILL.md) | Reference the Google Chat `gws` surface for inspecting schema, browsing resources, and calling raw Chat API methods for spaces, messages, memberships, and media. |
+| [gws-chat-send](skills/gws-chat-send/SKILL.md) | Send a plain-text Google Chat message to a specific space with the `gws` helper command and explicit write-safety confirmation. |
+| [gws-classroom](skills/gws-classroom/SKILL.md) | Reference the Google Classroom `gws` surface for exploring courses, rosters, invitations, coursework, and other raw API methods through schema-driven commands. |
+| [gws-docs](skills/gws-docs/SKILL.md) | Reference the Google Docs `gws` surface for discovering document methods, inspecting schemas, and using raw Docs API calls alongside the append helper. |
+| [gws-docs-write](skills/gws-docs-write/SKILL.md) | Append plain text to the end of a Google Doc with the `gws` helper command, with clear guidance on when to switch to raw `batchUpdate` calls for richer edits. |
+| [gws-gmail](skills/gws-gmail/SKILL.md) | Reference the Gmail `gws` surface for discovering mail resources and helper commands, then build the right raw or helper invocation for sending, reading, labels, threads, drafts, and watch flows. |
+| [gws-gmail-read](skills/gws-gmail-read/SKILL.md) | Read Gmail messages through the raw `gws gmail users messages get` API path, including header extraction, multipart body decoding, and the missing `+read` helper caveat. |
+| [gws-gmail-triage](skills/gws-gmail-triage/SKILL.md) | Summarize unread or query-filtered Gmail inbox messages with the `gws gmail +triage` helper, including sender, subject, date, and optional labels. |
+| [gws-gmail-watch](skills/gws-gmail-watch/SKILL.md) | Watch Gmail for new messages through Pub/Sub-backed `gws gmail +watch`, with options for polling, filtering, one-shot pulls, cleanup, and JSON output capture. |
+| [gws-meet](skills/gws-meet/SKILL.md) | Reference the Google Meet `gws` surface for inspecting conference records, spaces, participants, recordings, transcripts, and other raw Meet API methods. |
+| [gws-shared](skills/gws-shared/SKILL.md) | Shared operating rules for all `gws` skills, covering authentication, global flags, shell safety, JSON parsing quirks, and write-operation caution. |
+| [icm-skill-creator](skills/icm-skill-creator/SKILL.md) | Design and scaffold a new ICM-style skill workspace by interviewing the user, confirming the staged architecture, and generating the layered files, templates, and routing needed for resumable workflows. |
+| [jira-access](skills/jira-access/SKILL.md) | Query and summarize live Jira data for the DEB project, including ticket lookups, backlog and sprint views, assignee filters, blocked work, and reusable JQL patterns. |
+| [lit-parse](skills/lit-parse/SKILL.md) | Parse PDFs, Office docs, and images into readable text files with the local `lit` CLI, including batch conversion patterns and filename normalization guidance. |
+| [minutes-of-meeting](skills/minutes-of-meeting/SKILL.md) | Turn meeting transcripts or Google Docs into durable MOM artifacts by extracting acts, decisions, and todos, checking for financial sensitivity, previewing structure, and then writing the final markdown summary. |
+| [retrospect-and-update-skill](skills/retrospect-and-update-skill/SKILL.md) | Retrospect on a failed or wasteful thread, extract the corrected execution pattern, and patch the responsible skill instructions so the same mistake is less likely to recur. |
+| [tech-feasibility](skills/tech-feasibility/SKILL.md) | Turn a raw tech idea into a staged feasibility workspace by checking premises, probing scope in batches, confirming an outline, writing the analysis, and optionally generating a scoped Excel deliverable. |
+| [use-cases](skills/use-cases/SKILL.md) | Excavate evidence from a finished project repo and turn it into a staged, publishable use-case narrative through extraction, story drafting, and final polish. |

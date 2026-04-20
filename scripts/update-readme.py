@@ -8,7 +8,7 @@ SKILLS = sorted((ROOT / "skills").glob("*/SKILL.md"))
 
 def desc(path: Path) -> str:
     text = path.read_text(encoding="utf-8")
-    m = re.search(r"^---\n(.*?)\n---\n", text, re.S)
+    m = re.search(r"^(?:`{3,}[^\n]*\n)?---\n(.*?)\n---\n", text, re.S)
     if not m:
         return ""
     for line in m.group(1).splitlines():
