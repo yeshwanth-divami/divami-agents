@@ -28,6 +28,8 @@ updated by every stage and command thereafter.
 | `contracts` | object | stage 30+ | Cross-module contracts — see below |
 | `traceability` | object | stages 20, 40a, 40c | ID lineage map — see below |
 | `change_records` | object | `/daksh change` | Change record index — see below |
+| `risk_register` | array | init (inherited stages) + `preflight.py` (warnings) | Persistent risk log — see below |
+| `discovery_records` | object | stage 50 (impl) | Legacy constraint discoveries — see below |
 | `required_skills` | array | init | Skills that must be present, e.g. `["doc-narrator", "vyasa"]` |
 | `jira` | object | `/daksh jira` | Jira sync state — see below |
 
@@ -74,13 +76,56 @@ For combined stages (small weight class): `"00+10"`, `"40a+40b:AUTH"`.
 ```jsonc
 {
   "status": "not_started",   // not_started | in_progress | pending_approval | approved | revision_needed
+  "mode": "greenfield",       // greenfield | inherited | delta — see below
   "output": "docs/client-context.md",
+  "inherited_ref": null,      // Path or URL to the artifact this stage inherits from (inherited/delta modes only)
   "locked_by": null,          // Name of person running this stage, or null
   "doc_hash": null,           // SHA-256 of output file, set when stage completes
   "approvals": [],            // Array of approval objects (see below)
   "revision_history": []      // Array of revision objects (see below)
 }
 ```
+
+### Stage modes
+
+| Mode | Meaning | Document produced | Traceability | Approval gate |
+|---|---|---|---|---|
+| `greenfield` | Written from scratch through Daksh | Full spec at `output` path | Full ID chain (UC → FR → US → TASK) | Normal — must be explicitly approved |
+| `inherited` | Satisfied by an existing artifact predating Daksh | None — `inherited_ref` points to the existing doc | None — existing state is not ID-tagged | Auto-acknowledged at init; recorded in risk register as amber |
+| `delta` | Existing state plus planned changes | Two-part doc: inherited baseline reference + delta section at `output` path | IDs only for new/changed work in the delta section | Normal — delta section must be approved |
+
+**`mode` is inferred by the LLM at init, not declared by the user.** The LLM
+reads available signals — existing files, external doc links, git history,
+user answers — and proposes a mode for each stage. The user confirms or
+corrects before the manifest is written. This keeps the PTL from needing to
+know the greenfield/inherited/delta distinction upfront.
+
+Inference signals the LLM uses:
+
+| Signal | Likely inference |
+|---|---|
+| Existing file at `output` path with real content | `inherited` |
+| User mentions "we have a BRD already" / provides a link | `inherited` |
+| Stage predates the project but module is new work | `delta` |
+| No prior artifact exists, module is net-new | `greenfield` |
+| Ambiguous — LLM asks one clarifying question | confirmed before write |
+
+**`mode` defaults to `"greenfield"` if omitted.** Preserves backward
+compatibility — manifests created before brownfield support was added behave
+as before.
+
+**`inherited_ref`** is required when `mode` is `"inherited"` or `"delta"`.
+It must be a resolvable pointer to the artifact this stage defers to: a
+relative file path (`docs/legacy/vision.md`), a section anchor
+(`docs/baseline.md#vision`), or an external URL. It is informational — Daksh
+does not hash or validate it. If the referenced artifact changes, that is an
+acknowledged risk, not a system error.
+
+**Traceability for delta stages:** only items introduced or changed in the
+delta section carry traceability IDs. Items described in the inherited
+baseline section use `"tier": "inherited"` in the traceability map — a
+description-only reference with no ID chain. This distinction is enforced by
+the stage CONTEXT.md, not by a script.
 
 ### Stage 50 (impl) output and approval contract
 
@@ -166,9 +211,19 @@ Each key is an artifact ID: `"UC-001"`, `"FR-001"`, `"US-AUTH-001"`,
   "parent": "UC-001",         // null for top-level UCs
   "children": ["FR-001", "FR-002"],
   "stage": "20",              // Stage that created this entry
-  "module": null               // null for stage 20 IDs, "AUTH" for module-scoped IDs
+  "module": null,              // null for stage 20 IDs, "AUTH" for module-scoped IDs
+  "tier": "tracked"           // tracked | inherited — see below
 }
 ```
+
+**`tier` values:**
+
+| Value | Meaning |
+|---|---|
+| `"tracked"` | Full ID chain enforced. This entry participates in orphan checks and traceability validation. Default for all greenfield and delta-section items. |
+| `"inherited"` | Description-only reference to existing state. No ID chain. Orphan checks skip it. Used for items from delta stages that describe inherited baseline (not new work). |
+
+`tier` defaults to `"tracked"` if omitted.
 
 ---
 
@@ -252,6 +307,86 @@ silently weakening the gate.
 
 - `OPEN` — change set written, docs marked `pending_approval`, accumulating approvals
 - `RESOLVED` — all required approvals collected. Touched docs returned to `approved` status.
+
+---
+
+## `discovery_records` entries
+
+Each key is a DR identifier: `"DR-001"`, `"DR-002"`, etc. DRs share the
+`change-records/` directory with CRs but use `DR-` prefix. Numbering is
+sequential across both CRs and DRs within a module.
+
+```jsonc
+{
+  "DR-001": {
+    "module": "AUTH",
+    "path": "docs/implementation/AUTH/change-records/DR-001.md",
+    "status": "OPEN",              // OPEN | RESOLVED
+    "raised_by": "Priya Singh",
+    "date": "2026-04-14",
+    "task": "TASK-AUTH-003",       // Task that surfaced the discovery
+    "summary": "Legacy session store uses non-revocable tokens incompatible with OAuth2 logout"
+  }
+}
+```
+
+**DR vs CR distinction:**
+
+| | Change Record (CR) | Discovery Record (DR) |
+|---|---|---|
+| Trigger | Spec existed; reality diverged | No spec; constraint found in existing code |
+| References | A Daksh-authored document | File paths and behaviors in the codebase |
+| Response | Spec revision + re-approval | Baseline update + decision on path forward |
+| Written by | `/daksh change [MODULE]` command | Engineer manually from `templates/discovery-record.md` |
+
+Open DRs are surfaced by `tend` and `risk-profile`. A DR does not block
+downstream stages by itself — the task it blocks does. Once the decision
+is filled in and the task resumes, the DR is marked `RESOLVED`.
+
+---
+
+## `risk_register` entries
+
+An array of risk objects. Order is chronological (appended, never reordered).
+
+```jsonc
+[
+  {
+    "risk_id": "RISK-001",      // Unique identifier, auto-incremented
+    "stage": "00",              // Stage this risk covers
+    "type": "inherited",        // inherited | unapproved | open_cr | open_question
+    "reason": "Stage satisfied by pre-Daksh artifact",
+    "inherited_ref": "docs/legacy/brief.md",  // null for non-inherited types
+    "status": "acknowledged",   // open | acknowledged
+    "acknowledged_by": "Ravi Kumar",  // null until acknowledged
+    "created_at": "2026-04-14T10:00:00Z",
+    "acknowledged_at": null     // ISO datetime, set by risk_profile.py --accept-risk
+  }
+]
+```
+
+**`type` values:**
+
+| Type | Written by | Meaning |
+|---|---|---|
+| `inherited` | `init --module` | Stage satisfied by a pre-Daksh artifact; never formally approved |
+| `unapproved` | `preflight.py` | Greenfield stage was run without its predecessor being approved |
+| `open_cr` | `preflight.py` | A change record is open and blocking downstream stages |
+| `open_question` | `preflight.py` | An approved doc has unresolved open questions |
+
+**`status` values:**
+
+- `open` — risk exists and has not been acknowledged
+- `acknowledged` — PTL has explicitly accepted this risk via
+  `/daksh risk-profile --accept-risk RISK-NNN --acknowledged-by NAME`
+
+Inherited stages start as `acknowledged` at init — the PTL confirmed the
+mode table before the manifest was written, so the risk is implicitly
+accepted. All other types start as `open`.
+
+Entries are never deleted. Resolved conditions (e.g. a stage gets formally
+approved) do not remove the entry — they are historical record. `risk-profile`
+filters its report by current condition, not by register contents.
 
 ---
 

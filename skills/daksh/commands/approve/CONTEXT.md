@@ -52,3 +52,11 @@ approval again.
 **Stage 60 gate:** `50:[MODULE]` approval is the upstream gate for stage 60
 (handbook). Once `50:[MODULE]` is `approved`, `/daksh preflight 60 MODULE` will
 pass the prior-stage check and the handbook stage can proceed.
+
+**Inherited stages:** stages with `mode: "inherited"` are auto-acknowledged
+at init and start with `status: "approved"`. Running `/daksh approve` on an
+inherited stage is a no-op — tell the user: "Stage [key] is inherited and
+already acknowledged. No approval action needed." If the PTL wants to formally
+document a stage that was inherited (e.g. to attach a proper approval record
+to an existing BRD), they should change `mode` to `delta` in the manifest,
+run the delta stage to produce a Daksh-owned document, then approve normally.

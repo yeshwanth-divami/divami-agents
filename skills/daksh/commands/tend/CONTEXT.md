@@ -46,7 +46,13 @@ For each stage in `manifest.stages`:
 
 ### 2. Hash drift (stale approvals)
 
-For every stage with `status = "approved"`:
+For every stage with `status = "approved"` **and `mode` is not `"inherited"`**:
+Skip inherited stages entirely for hash drift — they have no Daksh-owned
+output file and their acknowledged risk is already in the risk register.
+Collect them separately and list them in the **Inherited (acknowledged)**
+section of the report (see Output format below).
+
+For every non-inherited stage with `status = "approved"`:
 1. Compute SHA-256 of the file at `stages[key].output`:
    ```bash
    shasum -a 256 <file> | cut -d' ' -f1
@@ -118,7 +124,15 @@ Read `manifest.rules`:
   flag: "RULES VIOLATION — Jira sync is required for [class] projects but
   not configured. Run `/daksh jira` to configure."
 
-### 8. User manual coverage
+### 8. Discovery record audit
+
+Read `manifest.discovery_records`. For each entry:
+- If `status = "OPEN"` → flag: "OPEN DR — [DR-ID] ([module]): [summary].
+  Task [task] is blocked pending TL/PTL decision.
+  Action: review `[path]` and fill in the Decision section."
+- If all DRs are `RESOLVED` or none exist → note in Clean section.
+
+### 9. User manual coverage
 
 If any module has a `50-[MODULE]` stage with status `in_progress` or `approved`:
 
@@ -161,6 +175,13 @@ Report in this order:
 [warning type] — [stage or doc] — [one-line description]
 
 ...
+
+### Inherited (acknowledged)
+
+[list of inherited stages with their `inherited_ref` — amber, not flags]
+These stages are satisfied by pre-Daksh artifacts. They are tracked in the
+risk register and do not require action unless the PTL chooses to formalize
+them.
 
 ### Clean
 

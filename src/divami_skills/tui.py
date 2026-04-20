@@ -65,13 +65,9 @@ def _icon_cell(status: str, llm_name: str) -> Text:
     _, _, _, _, g_icon, l_icon = _palette(llm_name)
     color = l_icon if manager.is_local(llm_name) else g_icon
     if status == "full_symlink":
-        return Text(" ✓* ", style=Style(color=color, bold=True))
-    elif status == "full_copy":
-        return Text(" ✓✝︎ ", style=Style(color=color, bold=True))
+        return Text(" ✓  ", style=Style(color=color, bold=True))
     elif status == "global_symlink":
-        return Text(" o* ", style=Style(color=color))
-    elif status == "global_copy":
-        return Text(" o✝︎ ", style=Style(color=color))
+        return Text(" o  ", style=Style(color=color))
     elif status == "partial":
         return Text("  ~  ", style=Style(color=color))
     else:
@@ -100,7 +96,6 @@ class SkillsApp(App):
         Binding("enter", "toggle", "Expand / Toggle"),
         Binding("space", "toggle", "Expand / Toggle"),
         Binding("t", "view_toggle", "Global / Local"),
-        Binding("m", "mode_toggle", "Copy / Symlink"),
         Binding("r", "refresh", "Refresh"),
     ]
 
@@ -112,7 +107,6 @@ class SkillsApp(App):
         self._reg: manager.Registry = {}
         self._llms: dict[str, Path] = {}
         self._show_local: bool = True
-        self._use_copy: bool = True
         self._skillsets: list[str] = []
         self._expanded: set[str] = set()
         self._rows: list[RowMeta] = []
@@ -140,26 +134,18 @@ class SkillsApp(App):
             return self._llms.get(llm_name)
         return self._llms.get(_base(llm_name))
 
-    def _install_kind(self, llm_path: Path, skill_name: str) -> str | None:
-        return manager.install_kind(llm_path, skill_name)
-
     def _desired_full_status(self) -> str:
-        return "full_copy" if self._use_copy else "full_symlink"
+        return "full_symlink"
 
     def _skill_cell_status(self, llm_name: str, llm_path: Path, skill_name: str) -> str:
-        local_kind = self._install_kind(llm_path, skill_name)
-        if local_kind == "symlink":
+        local_kind = manager.install_kind(llm_path, skill_name)
+        if local_kind is not None:
             return "full_symlink"
-        if local_kind == "copy":
-            return "full_copy"
         if manager.is_local(llm_name):
             global_path = self._global_llm_path(llm_name)
             if global_path is not None:
-                global_kind = self._install_kind(global_path, skill_name)
-                if global_kind == "symlink":
+                if manager.install_kind(global_path, skill_name) is not None:
                     return "global_symlink"
-                if global_kind == "copy":
-                    return "global_copy"
         return "none"
 
     def _skillset_cell_status(self, llm_name: str, llm_path: Path, skillset: str) -> str:
@@ -184,14 +170,12 @@ class SkillsApp(App):
 
         view = self._view_llms()
         view_label = "Local" if self._show_local else "Global"
-        mode_label = "Copy" if self._use_copy else "Symlink"
-        self.sub_title = f"[{view_label}] [{mode_label}]"
+        self.sub_title = f"[{view_label}]"
         self.query_one("#help_primary", Label).update(
             "Name: ENTER=expand  ·  LLM: ENTER=install/remove"
         )
         self.query_one("#help_secondary", Label).update(
-            "T=Global/Local  ·  M=Copy/Symlink  ·  *=symlink  ·  ✝︎=copy  ·  "
-            "R=refresh  ·  Q=quit"
+            "T=Global/Local  ·  R=refresh  ·  Q=quit"
         )
 
         table = self.query_one("#matrix", DataTable)
@@ -292,10 +276,9 @@ class SkillsApp(App):
                 manager.unlink(llm_path, meta.skillset, self._reg)
                 self._set_status(f"Removed  {meta.skillset}  →  {llm_name}")
             else:
-                manager.link(llm_path, meta.skillset, self._reg, copy=self._use_copy)
+                manager.link(llm_path, meta.skillset, self._reg)
                 n = len(manager._skills_in(meta.skillset, self._reg))
-                mode = "Copied" if self._use_copy else "Linked"
-                self._set_status(f"{mode} {n} skills  {meta.skillset}  →  {llm_name}")
+                self._set_status(f"Linked {n} skills  {meta.skillset}  →  {llm_name}")
 
         elif meta.kind == "skill":
             if col_idx == 0:
@@ -308,10 +291,8 @@ class SkillsApp(App):
                 manager.unlink_skill(llm_path, meta.skill)
                 self._set_status(f"Removed  {meta.skill}  →  {llm_name}")
             else:
-                manager.link_skill(llm_path, meta.skillset, meta.skill, self._reg,
-                                   copy=self._use_copy)
-                mode = "Copied" if self._use_copy else "Linked"
-                self._set_status(f"{mode}  {meta.skill}  →  {llm_name}")
+                manager.link_skill(llm_path, meta.skillset, meta.skill, self._reg)
+                self._set_status(f"Linked  {meta.skill}  →  {llm_name}")
 
         self._build_table(restore_cursor=(row_idx, col_idx))
 
@@ -319,13 +300,6 @@ class SkillsApp(App):
         self._show_local = not self._show_local
         table = self.query_one("#matrix", DataTable)
         self._build_table(restore_cursor=(table.cursor_row, 0))
-
-    def action_mode_toggle(self) -> None:
-        self._use_copy = not self._use_copy
-        mode = "Copy" if self._use_copy else "Symlink"
-        table = self.query_one("#matrix", DataTable)
-        self._build_table(restore_cursor=(table.cursor_row, table.cursor_column))
-        self._set_status(f"Install mode switched to: {mode}")
 
     def action_refresh(self) -> None:
         table = self.query_one("#matrix", DataTable)

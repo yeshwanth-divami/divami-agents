@@ -109,7 +109,7 @@ def scan_missing_outputs(manifest: dict) -> list[dict]:
 
 
 def scan_risk_register(manifest: dict) -> list[dict]:
-    """Items already in the risk register that are still open."""
+    """Open (unacknowledged) risk register entries — HIGH severity."""
     items = []
     for entry in manifest.get("risk_register", []):
         if entry.get("status") == "open":
@@ -118,6 +118,21 @@ def scan_risk_register(manifest: dict) -> list[dict]:
                 "category": "Risk register",
                 "detail": f"[{entry['risk_id']}] {entry['reason']} (stage {entry['stage']})",
                 "action": f"`/daksh risk-profile --accept-risk {entry['risk_id']} --acknowledged-by <name>`",
+            })
+    return items
+
+
+def scan_inherited(manifest: dict) -> list[dict]:
+    """Inherited stages — acknowledged at init, always visible as LOW (amber)."""
+    items = []
+    for entry in manifest.get("risk_register", []):
+        if entry.get("type") == "inherited" and entry.get("status") == "acknowledged":
+            ref = entry.get("inherited_ref") or "unknown"
+            items.append({
+                "severity": "LOW",
+                "category": "Inherited stage",
+                "detail": f"[{entry['risk_id']}] Stage {entry['stage']} defers to pre-Daksh artifact: {ref}",
+                "action": f"`/daksh approve {entry['stage']}` to formally approve, or carry as acknowledged",
             })
     return items
 
@@ -206,6 +221,7 @@ def main() -> int:
         + scan_open_crs(manifest)
         + scan_stale_hashes(manifest)
         + scan_missing_outputs(manifest)
+        + scan_inherited(manifest)
     )
     # Deduplicate by detail string (risk_register entries overlap with pending_approval scan)
     seen: set[str] = set()

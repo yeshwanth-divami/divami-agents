@@ -119,6 +119,12 @@ def base_checks(manifest: dict, key: str) -> list[dict]:
     prior = stages.get(prior_key)
     if not prior:
         return checks + [result("FAIL", f"Prior stage {prior_key} not registered in manifest", True)]
+    prior_mode = prior.get("mode", "greenfield")
+    if prior_mode == "inherited":
+        ref = prior.get("inherited_ref") or "no ref recorded"
+        checks.append(result("PASS",
+                             f"Prior stage {prior_key} is inherited (acknowledged) — ref: {ref}"))
+        return checks
     required = manifest.get("rules", {}).get("approvals_per_gate", 1)
     approvals = len(prior.get("approvals", []))
     approved = approvals >= required

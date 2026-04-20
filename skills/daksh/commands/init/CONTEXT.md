@@ -26,6 +26,176 @@ has a home for its output.
    name, client name, timeline, team size from available context.
    Skip questions already answered by these documents.
 
+## Routing
+
+If the user invoked `/daksh init --module [MODULE]`, go to
+**Module-level init** below. Do not run the full project init flow.
+
+Otherwise, continue to **Questions** for a full greenfield project init.
+
+---
+
+## Module-level init (brownfield)
+
+This path is taken when the user runs `/daksh init --module [MODULE]`.
+It onboards one module of an existing project into Daksh without
+disturbing the rest of the project.
+
+### Step 1 — Check for existing manifest
+
+- If `docs/.daksh/manifest.json` exists: read it. This module will be
+  added to the existing pipeline. Skip project-level questions already
+  answered in the manifest.
+- If it does not exist: this is the first module being onboarded.
+  Ask the project-level questions from the **Questions** section
+  (questions 1–6 only), then return here to complete module setup.
+
+### Step 2 — Gather brownfield signals
+
+Before inferring stage modes, read the following without asking:
+
+1. Does `docs/vision.md` exist with real content?
+2. Does `docs/business-requirements.md` exist?
+3. Does `docs/implementation-roadmap.md` exist?
+4. Does `docs/implementation/[MODULE]/prd.md` exist?
+5. Does `docs/implementation/[MODULE]/trd.md` exist?
+6. Are there files in `docs/conversations/client/` that reference a
+   prior spec, BRD, or product brief (internal or external link)?
+7. What does recent git history say about this module's codebase state?
+   (`git log --oneline -20 -- [likely module path]` if accessible)
+
+### Step 3 — Infer stage modes
+
+Using the signals above, infer a `mode` for each stage of this module.
+Apply these rules:
+
+| Signal | Inference |
+|---|---|
+| File exists at `output` path with real content | `inherited` |
+| User or doc references an external artifact (link, drive doc) | `inherited` with that link as `inherited_ref` |
+| Artifact exists but this module changes or extends it | `delta` |
+| No prior artifact exists, work is net-new | `greenfield` |
+| Ambiguous — ask one clarifying question before inferring | confirmed before write |
+
+### Step 4 — Confirm with PTL
+
+Present the inferred modes as a table before writing anything:
+
+```
+Inferred stage modes for module [MODULE]:
+
+Stage    Mode          Basis
+00       inherited     [file path or "client brief exists in conversations/"]
+10       inherited     [file path or basis]
+20       inherited     [file path or basis]
+30       delta         [roadmap exists; this module adds N sprints]
+40a      greenfield    [no prior PRD for this module]
+40b      greenfield    [no prior TRD for this module]
+40c      greenfield    [task list will be written by Daksh]
+50       greenfield    [implementation tracked by Daksh]
+
+Confirm? Enter y to proceed, or correct any row (e.g. "20 is delta, not inherited").
+```
+
+Do not write the manifest until the PTL confirms. Corrections update the
+inferred table in place — re-show the full table after each correction,
+then ask for final confirmation.
+
+### Step 5 — Write the manifest
+
+**If manifest exists:** add the module to `manifest.modules` and append
+the module's stage entries (`40a:[MODULE]`, `40b:[MODULE]`, `40c:[MODULE]`,
+`50:[MODULE]`) to `manifest.stages`. Do not touch existing entries.
+
+**If manifest does not exist:** create it from the template, populated
+with the project-level answers from Step 1 and the module's stage entries.
+
+Stage skeleton for each mode:
+
+```jsonc
+// greenfield or delta
+{
+  "status": "not_started",
+  "mode": "greenfield",        // or "delta"
+  "output": "<canonical path>",
+  "inherited_ref": null,       // populated for delta stages
+  "locked_by": null,
+  "doc_hash": null,
+  "approvals": [],
+  "revision_history": []
+}
+
+// inherited
+{
+  "status": "approved",
+  "mode": "inherited",
+  "output": null,
+  "inherited_ref": "<file path or URL confirmed in Step 4>",
+  "locked_by": null,
+  "doc_hash": null,
+  "approvals": [],
+  "revision_history": []
+}
+```
+
+For **project-level inherited stages** (00, 10, 20, 30): write these to
+`manifest.stages` only if they do not already exist. If the manifest
+already has them, leave them untouched.
+
+### Step 6 — Register inherited risk
+
+For every stage set to `inherited`, append one entry to
+`manifest.risk_register` (the array):
+
+```jsonc
+{
+  "risk_id": "RISK-NNN",
+  "stage": "00",
+  "type": "inherited",
+  "reason": "Stage satisfied by pre-Daksh artifact",
+  "inherited_ref": "<same ref as stage entry>",
+  "status": "acknowledged",
+  "acknowledged_by": "<PTL name from roster>",
+  "created_at": "<ISO datetime now>",
+  "acknowledged_at": "<ISO datetime now>"
+}
+```
+
+`risk_id` is `RISK-` followed by the next available integer across the
+whole register (e.g. if 3 entries exist, next is `RISK-004`). Pad to
+3 digits.
+
+Risk register entries for inherited stages start as `acknowledged` — not
+`open`. They are visible in every `risk-profile` run (amber, not red) but
+do not block downstream stages.
+
+### Step 7 — Scaffold module directory only
+
+Create only:
+
+```
+docs/implementation/[MODULE]/
+docs/implementation/[MODULE]/change-records/
+```
+
+Do not recreate project-level directories if they already exist.
+Do not touch `handbook/` stubs — those are written at stage 60.
+
+### Step 8 — Confirm to user
+
+```
+Module [MODULE] onboarded into Daksh pipeline.
+  Project:     [name]
+  Module:      [MODULE]
+  Inherited:   [list of inherited stages with their refs]
+  Delta:        [list of delta stages]
+  Greenfield:  [list of greenfield stages]
+  Risk items:  [N] inherited stages registered in risk profile (amber)
+  Next step:   /daksh prd [MODULE]
+```
+
+---
+
 ## Questions (ask all applicable at once, skip if answered in inputs)
 
 1. What is the project name and client name?

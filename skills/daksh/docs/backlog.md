@@ -10,3 +10,6 @@
     - JIRA ticket description template
     - JIRA ticket acceptance criteria template
     - JIRA ticket journey template
+- Packaging: distribute Daksh as project-owned files without a `git clone` dependency. Tagged versioned releases so teams can pin to a stable Daksh version. No shared mutable checkout.
+- PRD/TRD quality bar: Naveen's critique — spec guidance is too weak for UI specs, backend design, and solution architecture depth. `stages/40a-prd/CONTEXT.md` and `stages/40b-trd/CONTEXT.md` need stronger prescriptive guidance on what a good spec actually contains.
+- Multi-model generation: second and third opinion synthesis for PRDs and TRDs. Run the same stage through multiple models, surface disagreements, synthesize before approving. Prevents single-model blind spots in specs.

@@ -72,19 +72,58 @@ you can decide and what you must escalate.
    - [ ] PR created, handbook patch committed to branch
    - [ ] Jira ticket transitioned to In Review
 
-7. **Change record** — if during implementation you discover that:
+7. **Change record or discovery record** — two different situations, two
+   different artifacts. Use the right one.
+
+   **Change record (CR)** — the spec existed and reality diverged from it:
    - The TRD design is wrong or incomplete
    - A PRD acceptance criterion is unachievable as specified
    - A dependency assumption was false
 
-   Then **stop and run `/daksh change [MODULE]`**. Do not write a change
-   record by hand — the change command handles CR creation, doc patching,
-   manifest state, task creation, and Jira. A hand-written CR is an
-   ungated CR.
+   Run `/daksh change [MODULE]`. Do not write a CR by hand — the change
+   command handles CR creation, doc patching, manifest state, task creation,
+   and Jira. A hand-written CR is an ungated CR.
 
-   Do not proceed past the point of divergence until the change record
-   has been approved via `/daksh approve CR-NNN`. A silent workaround is
-   worse than a delay.
+   Do not proceed past the point of divergence until the CR has been
+   approved via `/daksh approve CR-NNN`. A silent workaround is worse than
+   a delay.
+
+   **Discovery record (DR)** — there was no Daksh spec for this; you found
+   a constraint in existing (pre-Daksh) code. Note: `impl start` proactively
+   surfaces DR candidates before you begin — if you acknowledged a risk and
+   then hit it, raise the DR immediately rather than working around it.
+   - Legacy auth cannot coexist with the new OAuth2 design
+   - An inherited service has undocumented rate limits that affect this module
+   - Existing data model has a constraint that blocks the planned migration
+
+   A DR is not a spec divergence — there is no spec to diverge from. It is
+   a constraint discovery in inherited code.
+
+   To raise a DR:
+   1. Copy `templates/discovery-record.md` to
+      `docs/implementation/[MODULE]/change-records/DR-NNN.md`
+      (next sequential number across all CRs and DRs in that directory).
+   2. Fill in all sections up to and including **Proposed path forward**.
+      Leave **Decision** blank — that belongs to TL/PTL.
+   3. Add an entry to `manifest.discovery_records`:
+      ```jsonc
+      {
+        "DR-NNN": {
+          "module": "[MODULE]",
+          "path": "docs/implementation/[MODULE]/change-records/DR-NNN.md",
+          "status": "OPEN",
+          "raised_by": "[Name]",
+          "date": "[today]",
+          "task": "TASK-[MODULE]-NNN",
+          "summary": "[one-line description from DR title]"
+        }
+      }
+      ```
+   4. Stop work on the affected task. Do not work around the constraint
+      without a decision. Surface the DR to TL/PTL in the same session.
+   5. Once TL/PTL fills in the **Decision** section, update
+      `manifest.discovery_records[DR-NNN].status` to `RESOLVED` and
+      resume the task under the decided path.
 
 ## Rules
 
