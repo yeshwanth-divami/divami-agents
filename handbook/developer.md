@@ -1,176 +1,37 @@
+Divami Agents is a small Python package that discovers skill sets on disk and materializes filesystem links into assistant-owned folders. It does not define a new skill runtime; it only helps assistants find the skill directories they already know how to load. This handbook is for the engineer changing the package, not the person using the TUI. By the end, you should understand where discovery happens, where linking happens, and which repository paths actually ship.
+
 # Developer Handbook
 
-Divami Agents is a small Python package that manages skill directories for multiple AI coding assistants. The key design choice is that the package does not invent a new runtime for skills; it only discovers skill sets, resolves assistant-specific destination folders, and materializes filesystem entries where each assistant already expects to find skills. This document explains how the project works internally so a future engineer can change it without breaking the installation model. By the end, you should understand the command surface, the registry model, the local relay behavior, and the release path from `skills/` to an installed skill directory.
+## The Runtime Spine
 
-## Repository Shape
+Most of the runtime lives in four files:
 
-The runtime path through the project is narrower than the repo tree might suggest.
+| Path | Responsibility | Why it matters |
+|---|---|---|
+| [src/divami_skills/cli.py](/Users/yeshwanth/Code/Divami/divami-agents/src/divami_skills/cli.py) | Argument parsing and command dispatch | Keeps the shell surface thin. |
+| [src/divami_skills/manager.py](/Users/yeshwanth/Code/Divami/divami-agents/src/divami_skills/manager.py) | Discovery, link, unlink, relay, and sync rules | Holds the real install contract. |
+| [src/divami_skills/tui.py](/Users/yeshwanth/Code/Divami/divami-agents/src/divami_skills/tui.py) | Textual matrix UI over manager calls | Reuses manager behavior instead of duplicating it. |
+| [scripts/pack.py](/Users/yeshwanth/Code/Divami/divami-agents/scripts/pack.py) | Builds `src/divami_skills/skills.zip` from `skills/` | Defines what packaged content ships. |
 
-| Path | Role in the system |
-|---|---|
-| `src/divami_skills/cli.py` | Parser and command dispatch. |
-| `src/divami_skills/manager.py` | All discovery, link,<br/>unlink, and RC logic. |
-| `src/divami_skills/tui.py` | Textual matrix UI over<br/>the manager layer. |
-| `skills/` | Source of truth for<br/>packaged skill content. |
-| `scripts/pack.py` | Builds `skills.zip` from<br/>`skills/`. |
-| `pyproject.toml` | Package metadata and<br/>console scripts. |
-
-There is also an `agents/` tree in the repo. The current runtime code does not read from it. Packaging and installation flow only through the top-level `skills/` directory and the Python package under `src/divami_skills/`.
-
-## Core Model
-
-The project has four important abstractions in code:
-
-| Abstraction | Concrete type | Owned by | Why it exists |
-|---|---|---|---|
-| skill set | directory containing skill dirs | filesystem | Gives the CLI one<br/>named unit to discover<br/>and install. |
-| registry | `dict[str, Path]` | `manager.build_registry` | Maps a skill-set name<br/>to the directory that<br/>contains its skills. |
-| assistant target | `dict[str, Path]` entry | `manager.load_all_llms` | Maps a target name such<br/>as `codex-local` to the<br/>destination folder to write. |
-| RC file | `.divami-agents.toml` | repo root | Declares a repo-local subset<br/>of skills to sync. |
-
-The CLI stays thin by design. It parses arguments, resolves the working directory, builds a registry, and then hands the actual work to `manager.py`.
+The shipping source of truth is the top-level `skills/` directory. The repo also has an `agents/` tree, but the current package and pack script do not consume it.
 
 ## Command Flow
 
-The command surface is small and stable. `main()` in [cli.py](/Users/yeshwanth/Code/Divami/divami-agents/src/divami_skills/cli.py) dispatches seven commands.
+The CLI currently exposes `unpack`, `list`, `link`, `unlink`, `sync`, `init`, and `tui`, plus the separate `divami-web-ui` entry point from [pyproject.toml](/Users/yeshwanth/Code/Divami/divami-agents/pyproject.toml). `cli.py` parses flags, builds a registry from `~/agents/skillsets` plus any `--roots`, resolves assistant destinations, and then hands the actual filesystem work to `manager.py`.
 
-```mermaid
-flowchart TD
-    A["cli.main()"] --> B["unpack"]
-    A --> C["list"]
-    A --> D["link"]
-    A --> E["unlink"]
-    A --> F["init"]
-    A --> G["sync"]
-    A --> H["tui"]
-    D --> I["manager.link(...)"]
-    E --> J["manager.unlink(...)"]
-    F --> K["manager.write_rc_template(...)"]
-    G --> L["manager.sync(...)"]
-    H --> M["SkillsApp"]
-```
+One non-obvious detail matters when reading the code: `unpack` is a local registration command in the current implementation. It resolves a `skills/` folder and creates a symlink in `~/agents/skillsets`; it does not fetch a release asset or ask for a password.
 
-Why these commands and nothing else:
+## Discovery and Install Rules
 
-| Command | Why it exists |
-|---|---|
-| `unpack` | Creates or registers the source material that all later commands need. |
-| `list` | Gives a zero-side-effect view into discovery and install state. |
-| `link` / `unlink` | Provide whole-skill-set install and removal without editing TOML. |
-| `init` / `sync` | Support repo-owned, subset-based installs. |
-| `tui` | Wraps the same manager operations in an interactive matrix. |
+`build_registry()` merges the default machine-wide skill-set directory with any extra roots passed by the caller. `load_all_llms()` combines global assistant targets with repo-local targets like `.agents/skills` and `.claude/skills`. Link operations then iterate the chosen skill set and either create direct global symlinks or local relay symlinks under `<repo>/agents/<skill>`.
 
-There is no separate command for single-skill management on the CLI because the package currently exposes that surface only through the TUI and the internal manager helpers.
+That relay is the main invariant worth protecting. Repo-local consumer folders do not point straight at the original skill source; they point at a relay inside the repo so multiple local assistant targets can share one stable source and prune it safely when the last consumer disappears.
 
-## Discovery and Registry Rules
+## What To Verify After Changes
 
-`manager.build_registry()` merges two sources:
+If you touch discovery, verify `divami-agents list --cwd /path/to/repo`. If you touch relay logic, verify both `codex-local` and `claude-local` installs against the same repo and confirm the shared relay under `<repo>/agents/`. If you touch the TUI, confirm that the symbols in `tui.py` still match the real manager status behavior instead of only the display legend.
 
-1. Every non-hidden directory under `~/agents/skillsets`
-2. Any extra roots passed in by the caller
+## Current Unknowns
 
-An extra root can be either a repo root or a `skills/` directory directly. The function first checks `root / "skills"` and falls back to `root` if that subdirectory does not exist. The registry key for an extra root is `root.name`.
-
-This is intentionally simple. There is no manifest for skill sets, no recursive search, and no remote registry protocol. That keeps discovery predictable and cheap.
-
-## Assistant Resolution
-
-Assistant paths are resolved in two layers:
-
-1. Global destinations from `load_global_llms()`
-2. Repo-local destinations from `get_local_llms(base)`
-
-`load_all_llms()` interleaves them in paired order so a UI can show `claude` next to `claude-local`, `codex` next to `codex-local`, and so on.
-
-The local naming contract is suffix-based. `manager.is_local()` treats any target ending in `-local` as repo-local. Several later behaviors depend on that convention, so do not rename it casually.
-
-## The Local Relay Mechanism
-
-The most non-obvious part of the project is the relay used for repo-local installs. When linking into a repo-local assistant target such as `.agents/skills`, the manager does not point the final symlink directly at the source skill directory. It first creates a relay under `<repo>/agents/<skill-name>`, then points the consumer path at that relay.
-
-That indirection gives all repo-local assistant folders a shared stable source inside the repo. Multiple local consumers can point at the same relay, and `_prune_local_relay()` can remove the relay only when no other local consumer still depends on it.
-
-This is the key invariant behind local installs:
-
-| Invariant | Why it matters |
-|---|---|
-| Every repo-local consumer points to a relay, not the original source | Keeps local consumer links relative and repo-contained. |
-| Relay cleanup happens only after the last consumer is gone | Prevents one local uninstall from breaking another assistant. |
-| Existing real directories are never overwritten by link operations | Avoids destroying user-managed content. |
-
-## Copy Versus Symlink
-
-The manager layer supports both modes through the `copy` boolean on `link`, `link_skill`, and the local relay installer. The CLI currently defaults to symlink mode for direct commands. The TUI starts in copy mode and lets the user toggle with `m`.
-
-That difference is intentional in the current code, even if it surprises readers at first. The TUI is optimized for safer exploration on machines where direct symlinks may be undesirable, while the CLI favors the lighter-weight filesystem representation unless the caller uses a path that already exists.
-
-## RC File Semantics
-
-The RC file reader is deliberately permissive in structure and strict in skill names.
-
-Rules:
-
-| Rule | Effect |
-|---|---|
-| Missing `.divami-agents.toml` | `sync` exits with a clear error. |
-| Empty RC structure | `sync` returns no work. |
-| Unknown assistant table | ignored if the target name is not resolvable |
-| Unknown skill name | reported in `missing_from_set` |
-| Already installed skill | reported in `already_linked` |
-
-`write_rc_template()` serializes the currently linked skills per assistant target. That means `init` is not just scaffolding. It is also a snapshot of the present install state.
-
-## TUI Behavior
-
-[tui.py](/Users/yeshwanth/Code/Divami/divami-agents/src/divami_skills/tui.py) is read-heavy and manager-backed. It does not duplicate discovery or link logic. Instead, it computes per-cell status and maps interactions back to `manager.link`, `manager.unlink`, `manager.link_skill`, and `manager.unlink_skill`.
-
-Status icons encode more detail than the plain CLI:
-
-| Status | Meaning |
-|---|---|
-| `full_symlink` | The selected target contains symlinks for the full set or skill. |
-| `full_copy` | The selected target contains copied directories. |
-| `global_symlink` | A repo-local view does not have the skill locally, but the global target does by symlink. |
-| `global_copy` | Same as above, but by copy. |
-| `partial` | Only some skills in a set are present. |
-| `none` | Nothing is installed. |
-
-One detail worth protecting: `_skillset_cell_status()` currently checks for `("full", "partial")` when deciding whether to remove a set, but `_skill_cell_status()` returns values such as `full_symlink` and `full_copy`. If you touch this area, verify the status vocabulary end to end rather than changing one branch in isolation.
-
-## Packaging Boundary
-
-Only files under `skills/` are packed into `src/divami_skills/skills.zip`. The package metadata excludes that zip from normal source editing concerns but includes it as package data for distribution.
-
-The release story is:
-
-1. Author or update skills in `skills/`
-2. Build `skills.zip` with `scripts/pack.py`
-3. Publish the Python package and GitHub release asset through the Makefile
-4. Let end users fetch the latest release asset through `divami-agents unpack`
-
-If you add new runtime content that must ship to end users, placing it only under `agents/` will not be enough. The pack script will miss it.
-
-## Safe Extension Points
-
-These are the lowest-risk places to add behavior:
-
-| Extension point | Safe change |
-|---|---|
-| `GLOBAL_LLM_DEFAULTS` | Add a new global assistant target. |
-| `LOCAL_LLM_RELPATHS` | Add a matching repo-local target. |
-| `main()` parser setup | Add a new command that reuses manager behavior. |
-| `manager.sync()` result model | Add richer reporting fields if the CLI and TUI both consume them consistently. |
-| `tui.py` bindings and labels | Improve the interface without changing the manager contract. |
-
-These are higher-risk changes:
-
-| Area | Why it is fragile |
-|---|---|
-| suffix-based `-local` detection | Several helper functions depend on this naming rule. |
-| relay creation and pruning | Easy place to create broken or dangling local installs. |
-| registry key naming from `root.name` | Changing it will break saved RC files and user expectations. |
-| status vocabulary in TUI | The UI flow depends on exact symbolic states. |
-
-## Remaining Ambiguities
-
-1. **Role of the repo's `agents/` tree** — The runtime code does not consume it, but the repository keeps parallel content there for at least some skills. The current handbook treats `skills/` as the only shipping source because that is what `scripts/pack.py` uses. If `agents/` is meant to become a runtime source later, the packaging contract should be made explicit in code rather than implied by directory convention.
+1. The repo carries both `skills/` and `agents/`, but only `skills/` is packaged today. If `agents/` is meant to become a runtime source, that contract should move from convention into code.
+2. The web UI exists as `divami-web-ui`, but the root docs still treat the Textual UI as the primary interface. Any expansion there should document when a user should prefer one surface over the other.

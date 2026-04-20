@@ -1,7 +1,7 @@
 ---
 name: gws-chat
 version: 1.0.0
-description: "Google Chat: Manage Chat spaces and messages."
+description: "Reference the Google Chat `gws` surface for inspecting schema, browsing resources, and calling raw Chat API methods for spaces, messages, memberships, and media."
 metadata:
   openclaw:
     category: "productivity"
@@ -70,4 +70,3 @@ gws schema chat.<resource>.<method>
 ```
 
 Use `gws schema` output to build your `--params` and `--json` flags.
-

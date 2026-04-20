@@ -1,7 +1,7 @@
 ---
 name: gws-gmail-triage
 version: 1.0.0
-description: "Gmail: Show unread inbox summary (sender, subject, date)."
+description: "Summarize unread or query-filtered Gmail inbox messages with the `gws gmail +triage` helper, including sender, subject, date, and optional labels."
 metadata:
   openclaw:
     category: "productivity"

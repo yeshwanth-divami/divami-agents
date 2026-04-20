@@ -1,6 +1,6 @@
 ---
 name: retrospect-and-update-skill
-description: Analyze the current chat after retries, false starts, or repeated corrections. Use when Codex needs to identify which false assumptions caused wasted work, extract the correct execution patterns discovered later in the thread, and update the implicated skill files so future runs start with the corrected workflow.
+description: Retrospect on a failed or wasteful thread, extract the corrected execution pattern, and patch the responsible skill instructions so the same mistake is less likely to recur.
 ---
 
 # Retrospect And Update Skill

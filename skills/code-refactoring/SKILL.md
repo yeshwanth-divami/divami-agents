@@ -1,6 +1,6 @@
 ---
 name: code-refactoring
-description: Use when the user wants to refactor an existing codebase without rewriting large amounts of already-solved logic. Invoke when reducing slop, extracting shared modules, deduplicating behavior, tightening boundaries, reusing existing code patterns, or turning copy-paste candidates into canonical services.
+description: Refactor code by finding the canonical existing implementation, choosing the smallest safe seam, and extracting or redirecting behavior instead of rewriting solved logic from scratch.
 ---
 
 # Code Refactoring

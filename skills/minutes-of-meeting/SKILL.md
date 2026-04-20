@@ -1,6 +1,6 @@
 ---
 name: minutes-of-meeting
-description: Use when the user wants to process one or more meeting transcript files into minutes of meeting (MOM). Invoke when the user asks to summarize a meeting, create MOM notes, capture action items, write up a standup or sprint planning session, or document decisions from any conversation transcript.
+description: Turn meeting transcripts or Google Docs into durable MOM artifacts by extracting acts, decisions, and todos, checking for financial sensitivity, previewing structure, and then writing the final markdown summary.
 ---
 
 # Meeting to MOM

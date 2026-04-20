@@ -1,7 +1,7 @@
 ---
 name: gws-gmail
 version: 1.0.0
-description: "Gmail: Send, read, and manage email."
+description: "Reference the Gmail `gws` surface for discovering mail resources and helper commands, then build the right raw or helper invocation for sending, reading, labels, threads, drafts, and watch flows."
 metadata:
   openclaw:
     category: "productivity"
@@ -57,4 +57,3 @@ gws schema gmail.<resource>.<method>
 ```
 
 Use `gws schema` output to build your `--params` and `--json` flags.
-

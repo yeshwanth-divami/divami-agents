@@ -1,6 +1,6 @@
 ---
 name: tech-feasibility
-description: Given a tech idea (1–3 sentences), probes scope through iterative Q&A batches, presents a doc outline for confirmation, then writes a feasibility analysis following doc-narrator conventions. Invoke when the user describes a tech idea and wants to understand how to build it.
+description: Turn a raw tech idea into a staged feasibility workspace by checking premises, probing scope in batches, confirming an outline, writing the analysis, and optionally generating a scoped Excel deliverable.
 argument-hint: "<one-line tech idea description>"
 allowed-tools: Read, Write, Glob, Grep
 ---

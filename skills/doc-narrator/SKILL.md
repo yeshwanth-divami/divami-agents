@@ -1,6 +1,6 @@
 ---
 name: doc-narrator
-description: "Narrative writing skill for technical documentation. Writes context seeds, prose-first sections, open questions, inline links, and 'Why?' tables for any technical document. Output targets Vyasa. Use standalone when writing or reviewing any technical doc, or invoked by grove as its writing layer."
+description: "Write or review technical docs for cold readers by seeding context first, leading with prose before diagrams, surfacing open questions, and formatting the result for Vyasa."
 allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 

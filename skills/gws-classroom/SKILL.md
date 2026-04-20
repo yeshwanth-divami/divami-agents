@@ -1,7 +1,7 @@
 ---
 name: gws-classroom
 version: 1.0.0
-description: "Google Classroom: Manage classes, rosters, and coursework."
+description: "Reference the Google Classroom `gws` surface for exploring courses, rosters, invitations, coursework, and other raw API methods through schema-driven commands."
 metadata:
   openclaw:
     category: "productivity"
@@ -72,4 +72,3 @@ gws schema classroom.<resource>.<method>
 ```
 
 Use `gws schema` output to build your `--params` and `--json` flags.
-

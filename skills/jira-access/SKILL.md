@@ -1,7 +1,7 @@
 ````skill
 ---
 name: jira-access
-description: Use when the user asks about Jira tickets, sprints, backlogs, or issues for this project. Covers querying, filtering, fetching, and summarising Jira data for the DEB project at https://divami.atlassian.net. Invoke when the user says things like "show me open tickets", "what's in the backlog", "find ticket DEB-xxx", "who's working on X", "list blocked items", or any question about Jira issues.
+description: Query and summarize live Jira data for the DEB project, including ticket lookups, backlog and sprint views, assignee filters, blocked work, and reusable JQL patterns.
 ---
 
 # Jira Access Skill

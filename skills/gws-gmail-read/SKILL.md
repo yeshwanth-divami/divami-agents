@@ -1,7 +1,7 @@
 ---
 name: gws-gmail-read
 version: 1.1.0
-description: "Gmail: Read a message and extract its body or headers."
+description: "Read Gmail messages through the raw `gws gmail users messages get` API path, including header extraction, multipart body decoding, and the missing `+read` helper caveat."
 metadata:
   openclaw:
     category: "productivity"

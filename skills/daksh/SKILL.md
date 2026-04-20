@@ -1,6 +1,6 @@
 ---
 name: daksh
-description: Structured product development lifecycle workflow using numbered AI chat modes. Use when building a new product or feature from scratch, onboarding a new client project, writing vision/business/roadmap documents, defining module PRDs and TRDs, breaking work into dev tasks, or implementing tasks with Git workflow. Invoke for any phase client onboarding → vision → business requirements → roadmap → module PRD → module TRD → module tasks → implementation.
+description: Run the Daksh product-delivery pipeline through explicit stage and command contexts, from onboarding and strategy docs through implementation, approvals, Jira sync, and handbook updates.
 ---
 
 # Daksh

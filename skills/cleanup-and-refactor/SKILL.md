@@ -1,6 +1,6 @@
 ---
 name: cleanup-and-refactor
-description: Cleans up working feature code after iterative chat-driven development. Use when code now works but contains dead paths, duplicate logic, or refactor debt from back-and-forth implementation. Produces a narrowed cleanup plan, one verification pass, and a commit-ready summary.
+description: Clean up already-working feature code after exploratory implementation by removing dead paths, tightening local structure, running one focused verification pass, and reporting what is safe to commit.
 argument-hint: "[feature scope, repo state, or cleanup goal]"
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---

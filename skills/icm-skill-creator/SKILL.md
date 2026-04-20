@@ -1,6 +1,6 @@
 ---
 name: icm-skill-creator
-description: Creates new Claude Code skills that strictly follow the Interpretable Context Methodology (ICM) — filesystem-based, progressively discloseable, staged workflows. Interviews the user (up to 5 questions), then scaffolds a complete ICM-compliant skill directory. Use when creating any new skill or restructuring an existing one to be ICM-compliant.
+description: Design and scaffold a new ICM-style skill workspace by interviewing the user, confirming the staged architecture, and generating the layered files, templates, and routing needed for resumable workflows.
 argument-hint: "[skill name or brief description of what it should do]"
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---

@@ -1,6 +1,6 @@
 ---
 name: lit-parse
-description: Convert documents (DOCX, PDF, XLSX, PPTX, images) to text/markdown files using the `lit` CLI tool. Use when the user wants to batch-convert or individually parse documents into readable text or markdown format.
+description: Parse PDFs, Office docs, and images into readable text files with the local `lit` CLI, including batch conversion patterns and filename normalization guidance.
 ---
 
 # lit-parse

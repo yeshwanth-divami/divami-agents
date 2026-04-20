@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Run a comprehensive code review
+description: Perform a severity-rated code review across security, correctness, performance, and maintainability, with concrete file-level findings and optional cross-validation for high-risk changes.
 ---
 
 # Code Review Skill

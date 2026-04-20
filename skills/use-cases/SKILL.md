@@ -1,6 +1,6 @@
 ---
 name: use-cases
-description: Excavate a use case from a finished project's artifacts (code, docs, transcripts) and produce a publishable narrative through gated stages. Invoke from within a project repo.
+description: Excavate evidence from a finished project repo and turn it into a staged, publishable use-case narrative through extraction, story drafting, and final polish.
 argument-hint: "excavate | narrate | polish | status"
 allowed-tools: Read, Glob, Grep, Bash, Write, Edit, Agent, WebFetch, TodoWrite
 ---

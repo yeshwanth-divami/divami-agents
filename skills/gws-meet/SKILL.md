@@ -1,7 +1,7 @@
 ---
 name: gws-meet
 version: 1.0.0
-description: "Manage Google Meet conferences."
+description: "Reference the Google Meet `gws` surface for inspecting conference records, spaces, participants, recordings, transcripts, and other raw Meet API methods."
 metadata:
   openclaw:
     category: "productivity"
@@ -49,4 +49,3 @@ gws schema meet.<resource>.<method>
 ```
 
 Use `gws schema` output to build your `--params` and `--json` flags.
-

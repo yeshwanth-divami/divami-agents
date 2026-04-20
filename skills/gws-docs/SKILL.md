@@ -1,7 +1,7 @@
 ---
 name: gws-docs
 version: 1.0.0
-description: "Read and write Google Docs."
+description: "Reference the Google Docs `gws` surface for discovering document methods, inspecting schemas, and using raw Docs API calls alongside the append helper."
 metadata:
   openclaw:
     category: "productivity"
@@ -45,4 +45,3 @@ gws schema docs.<resource>.<method>
 ```
 
 Use `gws schema` output to build your `--params` and `--json` flags.
-

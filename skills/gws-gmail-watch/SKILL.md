@@ -1,7 +1,7 @@
 ---
 name: gws-gmail-watch
 version: 1.0.0
-description: "Gmail: Watch for new emails and stream them as NDJSON."
+description: "Watch Gmail for new messages through Pub/Sub-backed `gws gmail +watch`, with options for polling, filtering, one-shot pulls, cleanup, and JSON output capture."
 metadata:
   openclaw:
     category: "productivity"

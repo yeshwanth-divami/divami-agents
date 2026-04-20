@@ -1,7 +1,7 @@
 ---
 name: gws-docs-write
 version: 1.0.0
-description: "Google Docs: Append text to a document."
+description: "Append plain text to the end of a Google Doc with the `gws` helper command, with clear guidance on when to switch to raw `batchUpdate` calls for richer edits."
 metadata:
   openclaw:
     category: "productivity"

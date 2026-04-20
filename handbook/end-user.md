@@ -1,83 +1,74 @@
+Divami Agents helps you install reusable skills into the folders your coding assistant already reads. You do not need to learn the package internals to use it; you only need a registered skill set and a target assistant such as Claude, Codex, Gemini, or Copilot. This handbook is the shortest path from clone to working TUI. By the end, you should know what to run first, what the symbols mean, and what to check when an install does not land where you expected.
+
 # End-User Handbook
 
-Divami Agents is a terminal UI for browsing and installing reusable AI skills into the folders that different coding assistants already watch. In this repo a "skill set" is a collection of skill folders; the TUI lets you install or remove them into any supported assistant with a single keypress. This handbook is for the person who wants to use the TUI, not maintain it.
+## Start Here
 
-## Who This File Is For
+### Clone
+Git Clone the repo by running
 
-Use this file if your question is "what do I run next?" and you are trying to get skills into Claude, Codex, Gemini, or Copilot. You do not need to understand how the package works internally. You only need to know which skill set you want and which assistant should receive it.
+```bash
+git clone https://github.com/yeshwanth-divami/divami-agents
+```
 
-For installation prerequisites and environment setup, see [ops.md](ops.md).
-
-## Opening the TUI
-
-From the repo root:
+### Setup
+For a first run from this repo, use:
 
 ```bash
 make setup-tui
 ```
+That target installs `uv` if needed, installs `divami-agents` as a global tool, registers this repo's `skills/` directory through `divami-agents unpack`, and opens the Textual TUI. 
 
-This is the recommended first-time path. It installs `uv` if it is missing, sets up the environment, unpacks the built-in skill archive, and opens the TUI.
+This step does not install any individual skill into Claude, Codex, Gemini, or Copilot yet. It only makes the `divami-agents` skill set discoverable by creating a registry entry under `~/agents/skillsets/`, so the TUI can show the skills as available choices.
 
-On subsequent runs, `divami-agents` is available globally — no venv activation needed:
+### Install basic skills
+
+In the TUI, toggle to global mode 
+
+<img src="global.png" alt="Global Mode">
+
+Installing in global mode creates entries in the assistant's user-level skill folder such as `~/.codex/skills` or `~/.claude/skills`. Those skills then become available in every repo for that assistant unless a repo-local install deliberately overrides the same skill name.
+
+install `retrospect-and-update-skill` and `convo-with-me` globally for the LLMs that you use (Better to install it for all the assistants you use, so you have a consistent experience across them). These two skills are the foundation of the preferred collaboration style. 
+
+`retrospect-and-update-skill` is how you update all the skills going forward.
+
+As an example you were able to set up your name and other preferences that `convo-with-me` relies on to apply the working style rules in every conversation.
+
+### Test in a new conversation
+Start a new conversation and the assistant should automatically ask you to set up your name with `retrospect-and-update-skill` if you haven't already, and then apply the `convo-with-me` rules for the rest of the conversation. 
+
+Nothing new is installed during this step. You are only verifying that the assistant can now see the globally linked skills and trigger their instructions in a fresh session. Also, because you have updated `convo-with-me` with your name, the assistant should greet you by that name in the first message on every subsequent conversation.
+
+
+### Install Skills in your repo
+
+<img src="local.png" alt="Local Mode">
 
 ```bash
-divami-agents tui
+cd /path/to/your/repo
+divami-agents tui --cwd /path/to/your/repo
 ```
 
-Pass `--cwd` if you want the TUI to also show repo-local assistant targets for a specific project:
+Skill-wise implication: repo-local installs write assistant-facing links under that repo, such as `.agents/skills` for Codex or `.claude/skills` for Claude. Under the hood, each local install points first to `<repo>/agents/<skill-name>`, which acts as the shared relay for any local assistant targets in the same repo.
 
-```bash
-divami-agents tui --cwd /path/to/repo
-```
+## What The TUI Shows
 
-## What You See
+Each row is either a skill set or an individual skill inside an expanded set. Each column is one assistant target in either the global view or the local view. Press `t` to switch between those views.
 
-The TUI opens a matrix. Each row is a skill set or an individual skill within a set. Each column is an assistant target. The status symbol in each cell tells you what is currently installed there.
-
-| Symbol | Meaning |
+| Symbol | Meaning in the current view |
 |---|---|
-| `●` | Installed locally in this repo for this LLM. |
-| `◎` | Installed globally and available to all repos for this LLM. |
-| `○` | Partially installed from this skill-set for this LLM. |
-| `·` | Not installed in this repo for this LLM. |
+| `●` | Installed in the selected target. |
+| `◎` | Visible only from the local view: installed globally, not locally. |
+| `○` | Mixed state across the skills in a set. |
+| `·` | Not installed in the selected target. |
 
-| Assistant column | Global path | Repo-local path |
-|---|---|---|
-| `claude` / `claude-local` | `~/.claude/skills` | `./.claude/skills` |
-| `codex` / `codex-local` | `~/.codex/skills` | `./.agents/skills` |
-| `gemini` / `gemini-local` | `~/.gemini/skills` | `./.gemini/skills` |
-| `copilot` / `copilot-local` | `~/.copilot/skills` | `./.github/skills` |
+## The Main Workflow
 
-Press `t` to toggle between global and repo-local views.
+Use the arrow keys to move. Press `Enter` or `Space` on the name column to expand or collapse a skill set. Press `Enter` or `Space` on an assistant cell to install or remove that skill set or skill for that target. Press `r` to refresh the matrix and `q` to quit.
 
-During `unpack`, skill sets are registered under `~/agents/skillsets/<repo-name>` by default, as a symlink to that repo's `skills/` folder.
-
-Skill sets are shown collapsed by default. Press `Enter` or `Space` on a skill-set row to expand it and see individual skills.
-
-## Installing and Removing Skills
-
-Navigate to the cell you want to change and press `Enter` or `Space`:
-
-- If the cell is empty, the skill or skill set is installed into that assistant.
-- If the cell is already installed, it is removed.
-
-The TUI installs by symlink. There is no copy-mode toggle in the current UI.
-
-After an install or removal, the matrix refreshes automatically. Press `r` to force a manual refresh if the display looks stale.
-
-## Key Bindings
-
-| Key | Action |
-|---|---|
-| `Enter` / `Space` | Install or remove the selected cell. |
-| `t` | Toggle between global and repo-local assistant views. |
-| `r` | Refresh the matrix from disk. |
-| `q` | Quit. |
+Local targets resolve under the repo given by `--cwd`, with `.agents/skills` for Codex, `.claude/skills` for Claude, `.gemini/skills` for Gemini, and `.github/skills` for Copilot. For why those folders exist and how they are resolved, see [developer.md](developer.md).
 
 ## If You Get Blocked
 
-**The matrix is empty or shows no skill sets.** The skill archive has not been unpacked yet. Quit the TUI and run `make setup-tui` from the repo root, then reopen.
-
-**An install does nothing or shows an error.** If you are on the repo-local view, make sure you opened the TUI with `--cwd /path/to/repo` pointing at the correct repo. Without `--cwd`, the local columns resolve to the directory the command was run from.
-
-**The TUI opens but the assistant column you expect is missing.** The column names come from the runtime configuration. Global names are `claude`, `codex`, `gemini`, `copilot`. Repo-local names are the same with a `-local` suffix and only appear when `--cwd` is set.
+If the matrix is empty, the machine likely has no registered skill sets under `~/agents/skillsets/`; rerun `divami-agents unpack` from a repo that has a `skills/` directory. If local columns are missing, reopen the TUI with `--cwd /path/to/repo`. If an install does not appear where you expect, press `t` to confirm whether you are looking at the global or local view before assuming the link failed.
