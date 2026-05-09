@@ -1,6 +1,7 @@
 ---
 name: daksh
 description: Run the Daksh product-delivery pipeline through explicit stage and command contexts, from onboarding and strategy docs through implementation, approvals, Jira sync, and handbook updates.
+version: "0.4"
 ---
 
 # Daksh
@@ -130,10 +131,11 @@ dependencies, and safe extension points before describing any manual command.
 
 ## Vyasa Rendering Rule
 
-When a Daksh document includes a process flow, dependency chain, stage sequence,
- or any arrow-based structure, render it as a Mermaid diagram instead of ASCII
- art or plaintext arrows. Use prose before the diagram, and use Mermaid labels
- that follow Vyasa rules such as literal `<br/>` for multiline node text.
+When a Daksh document needs an interactive dependency plan, build sequence,
+milestone relationship map, or other planning graph, use a fenced `items`
+block so Vyasa renders it as a React Flow graph. Use meaningful top-level
+groups instead of one fake root node, keep prose before the graph, and prefer
+short stacked phrase labels on edges when labels are needed.
 
 ## The Zen of Daksh
 

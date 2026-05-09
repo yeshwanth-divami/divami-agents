@@ -315,7 +315,7 @@ at `references/manifest-schema.md`. Populate:
   `workflow_preset` and `workflows` populated per "Jira configuration" section above.
   `done_statuses` set to union of all per-workflow `done_statuses`.
 - **`created`** — today's date.
-- **`daksh_version`** — read from skill's `.version` file.
+- **`daksh_version`** — read from the skill's `SKILL.md` frontmatter `version` field.
 
 ### 2. Scaffold directories
 
