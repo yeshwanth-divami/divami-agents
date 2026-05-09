@@ -130,10 +130,15 @@ dependencies, and safe extension points before describing any manual command.
 
 ## Vyasa Rendering Rule
 
-When a Daksh document includes a process flow, dependency chain, stage sequence,
- or any arrow-based structure, render it as a Mermaid diagram instead of ASCII
- art or plaintext arrows. Use prose before the diagram, and use Mermaid labels
- that follow Vyasa rules such as literal `<br/>` for multiline node text.
+When a Daksh document needs an interactive dependency plan, build sequence,
+milestone relationship map, or other planning graph, use a fenced `items`
+block so Vyasa renders it as a React Flow graph. Use meaningful top-level
+groups instead of one fake root node, keep prose before the graph, and prefer
+short stacked phrase labels on edges when labels are needed.
+
+Use Mermaid only when the structure is better expressed as a true flowchart,
+sequence, state diagram, or another diagram type that `items` does not model
+well. Do not fall back to ASCII arrows or plaintext chains.
 
 ## The Zen of Daksh
 
