@@ -69,7 +69,7 @@ Rules for Jira output:
 1. Opening paragraph (use a heading that fits the document) — what this roadmap covers, why this build sequence was chosen, which BRD it implements, who the audience is
 2. Scope — what's in this delivery, what's explicitly deferred
 3. Team map — squads, roles, ownership boundaries
-4. Dependency graph — Mermaid diagram, prose before diagram; show what blocks what
+4. Dependency graph — fenced `items` graph, prose before graph; show what blocks what with meaningful groups and concise edge labels where helpful
 5. Milestone plan — milestone name, components in, what it delivers, success criteria
 6. Cross-module contracts — interfaces, shared data models, API surface owned at PTL level; which team produces, which team consumes, and what the contract is
 7. Parallel work plan — what can be built simultaneously, what must be sequential
@@ -89,7 +89,7 @@ Rules for Jira output:
 
 ## Rules
 
-- Apply `doc-narrator` writing patterns. Prose before every diagram.
+- Apply `doc-narrator` writing patterns. Prose before every graph or diagram.
 - All documentation must follow Vyasa conventions — apply the `vyasa`
   skill for correct formatting, callouts, and content structure.
 - Every story traces to an FR. Orphan stories don't ship.
